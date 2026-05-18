@@ -4,6 +4,10 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
 
+// Importaciones FIREBASE
+import { db } from './firebaseConfig'; 
+import { collection, addDoc, serverTimestamp, query, onSnapshot } from "firebase/firestore"; 
+
 // Importación de activos para los marcadores
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
@@ -40,13 +44,56 @@ function RecenterMap({ position }) {
 // --- COMPONENTE PRINCIPAL ---
 function MyMapComponent() {
     const [userPosition, setUserPosition] = useState(null);
-    const [customMarkers, setCustomMarkers] = useState([]); // Marcadores definitivos
+    const [customMarkers, setCustomMarkers] = useState([]); 
     const [isAddingMode, setIsAddingMode] = useState(false);
+    const [cargando, setCargando] = useState(false); 
     const regionOptions = ["Colegio CTP CIT", "Soda armonia"];
     
-    // Estados para el flujo del formulario
-    const [tempMarker, setTempMarker] = useState(null); // Marcador que se está creando
-    const [formData, setFormData] = useState({ name: '', description: '', region: regionOptions[0] });
+    const [tempMarker, setTempMarker] = useState(null); 
+    const [formData, setFormData] = useState({ 
+        name: '', 
+        region: regionOptions[0],
+        wasteType: 'organico',
+        amount: '',
+        slope: 'plano',
+        waterProximity: '˂50m',
+        riskLevel: 'bajo',
+        materialType: 'reciclable'
+    });
+
+    useEffect(() => {
+        const reportesRef = collection(db, "reportes");
+        const q = query(reportesRef);
+
+        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+            const puntosFirebase = [];
+            
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                if (data.latitud && data.longitud) {
+                    puntosFirebase.push({
+                        id: doc.id, 
+                        position: [data.latitud, data.longitud],
+                        name: data.reportado_por || 'Anónimo',
+                        region: data.region,
+                        wasteType: data.tipo_residuo,
+                        amount: data.cantidad,
+                        slope: data.pendiente,
+                        waterProximity: data.cercania_agua,
+                        riskLevel: data.riesgo_contaminacion,
+                        materialType: data.clasificacion_material,
+                        timestamp: data.fecha_creacion ? new Date(data.fecha_creacion.seconds * 1000).toLocaleTimeString() : new Date().toLocaleTimeString()
+                    });
+                }
+            });
+
+            setCustomMarkers(puntosFirebase);
+        }, (error) => {
+            console.error("Error al traer puntos en tiempo real: ", error);
+        });
+
+        return () => unsubscribe();
+    }, []);
 
     const activateLocation = () => {
         if ("geolocation" in navigator) {
@@ -58,40 +105,58 @@ function MyMapComponent() {
         }
     };
 
-    // Al hacer clic, crea un marcador temporal y abre el form
     const handleMapClick = (latlng) => {
-        setFormData({ name: '', description: '', region: regionOptions[0] }); // Limpiar campos
+        setFormData({ 
+            name: '', 
+            region: regionOptions[0],
+            wasteType: 'organico',
+            amount: '',
+            slope: 'plano',
+            waterProximity: '˂50m',
+            riskLevel: 'bajo',
+            materialType: 'reciclable'
+        }); 
         setTempMarker({
             position: [latlng.lat, latlng.lng],
             timestamp: new Date().toLocaleTimeString()
         });
     };
 
-    // Función para guardar los datos del formulario
-    const handleFormSubmit = (e) => {
+    // Funcion para guardae en FIREBASE
+    const handleFormSubmit = async (e) => {
         e.preventDefault();
-        if (!formData.name || !formData.region) {
-            alert("Por favor completa los campos antes de guardar.");
+        if (!formData.name || !formData.amount) {
+            alert("Por favor completa los campos obligatorios antes de guardar.");
             return;
         }
 
-        const newMarker = {
-            ...tempMarker,
-            ...formData,
-            id: new Date().getTime()
-        };
+        setCargando(true);
 
-        setCustomMarkers((prev) => [...prev, newMarker]);
         try {
-            const storageKey = "archiveroPoints";
-            const rawPoints = localStorage.getItem(storageKey);
-            const parsedPoints = rawPoints ? JSON.parse(rawPoints) : [];
-            const safePoints = Array.isArray(parsedPoints) ? parsedPoints : [];
-            const savedPoint = { id: newMarker.id, name: newMarker.name, region: newMarker.region };
-            localStorage.setItem(storageKey, JSON.stringify([savedPoint, ...safePoints]));
-        } catch {
+            const reportesRef = collection(db, "reportes");
+            await addDoc(reportesRef, {
+                reportado_por: formData.name,
+                region: formData.region,
+                tipo_residuo: formData.wasteType,
+                cantidad: Number(formData.amount),
+                pendiente: formData.slope,
+                cercania_agua: formData.waterProximity,
+                riesgo_contaminacion: formData.riskLevel,
+                clasificacion_material: formData.materialType,
+                latitud: tempMarker.position[0],
+                longitud: tempMarker.position[1],
+                fecha_creacion: serverTimestamp()
+            });
+
+            alert("¡Reporte guardado exitosamente en Firebase!");
+            setTempMarker(null); 
+
+        } catch (error) {
+            console.error("Error al guardar en Firebase:", error);
+            alert("Hubo un error al conectar con Firebase.");
+        } finally {
+            setCargando(false);
         }
-        setTempMarker(null); // Cerramos el popup temporal
     };
 
     return (
@@ -147,11 +212,9 @@ function MyMapComponent() {
                     <Marker position={tempMarker.position}>
                         <Popup onClose={() => setTempMarker(null)}>
                 
-                {/*Formulario para ingresar detalles del reporte*/}
                             <form onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '200px' }}>
                                 <strong style={{ textAlign: 'center', borderBottom: '1px solid #eee', paddingBottom: '5px' }}>Detalles del Reporte</strong>
                                 
-                                {/* Campo de Nombre */}
                                 <label style={{fontSize: '0.8rem'}}>Reportado por:</label>
                                 <input 
                                     type="text"
@@ -171,10 +234,10 @@ function MyMapComponent() {
                                         <option value={region} key={region}>{region}</option>
                                     ))}
                                 </select>
-
+                                
                                 {/* Tipo de Residuo */}
                                 <label style={{fontSize: '0.8rem'}}>Tipo de residuo:</label>
-                                <select value={formData.riskLevel} onChange={(e) => setFormData({...formData, riskLevel: e.target.value})} style={{ padding: '5px' }}>
+                                <select value={formData.wasteType} onChange={(e) => setFormData({...formData, wasteType: e.target.value})} style={{ padding: '5px' }}>
                                     <option value="organico">Orgánico</option>
                                     <option value="plastico">Plástico</option>
                                     <option value="vidrio">Vidrio</option>
@@ -182,13 +245,13 @@ function MyMapComponent() {
                                     <option value="carton">Cartón</option>
                                     <option value="papel">Papel</option>
                                 </select>
-
-                                {/* Cantidad de residuos */}
+                                
+                                {/* Cantidad de Residuos */}
                                 <label style={{fontSize: '0.8rem'}}>Cantidad de residuos:</label>
                                 <input 
                                     type="number"
                                     placeholder="Cantidad"
-                                    min="0" // Solo permite poner números positivos
+                                    min="0" 
                                     value={formData.amount}
                                     onChange={(e) => setFormData({...formData, amount: e.target.value})}
                                     style={{ padding: '5px' }}
@@ -196,14 +259,14 @@ function MyMapComponent() {
 
                                 {/* Pendiente */}
                                 <label style={{fontSize: '0.8rem'}}>Pendiente:</label>
-                                <select value={formData.amount} onChange={(e) => setFormData({...formData, amount: e.target.value})} style={{ padding: '5px' }}>
+                                <select value={formData.slope} onChange={(e) => setFormData({...formData, slope: e.target.value})} style={{ padding: '5px' }}>
                                     <option value="plano">Plano</option>
                                     <option value="leve">Leve</option>
                                     <option value="pronunciada">Pronunciada</option>
                                     <option value="intensa">Intensa</option>
                                 </select>
 
-                                {/* Cercanía al agua */}
+                                {/* Cercania a Cuerpos de agua */}
                                 <label style={{fontSize: '0.8rem'}}>Cercanía al cuerpo de agua:</label>
                                 <select value={formData.waterProximity} onChange={(e) => setFormData({...formData, waterProximity: e.target.value})} style={{ padding: '5px' }}>
                                     <option value="˂50m">˂50m</option>
@@ -211,7 +274,7 @@ function MyMapComponent() {
                                     <option value="≥500m">≥500m</option>
                                 </select>
 
-                                {/* Nivel de Riesgo */}
+                                {/* Riesgo de contaminación */}
                                 <label style={{fontSize: '0.8rem'}}>Riesgo de contaminación:</label>
                                 <select value={formData.riskLevel} onChange={(e) => setFormData({...formData, riskLevel: e.target.value})} style={{ padding: '5px' }}>
                                     <option value="bajo">Bajo</option>
@@ -219,25 +282,31 @@ function MyMapComponent() {
                                     <option value="alto">Alto</option>
                                 </select>
 
-                                {/* Tipo de material */}
+                                {/* Tipo de Material */}
                                 <label style={{fontSize: '0.8rem'}}>El material clasifica como:</label>
                                 <select value={formData.materialType} onChange={(e) => setFormData({...formData, materialType: e.target.value})} style={{ padding: '5px' }}>
                                     <option value="reciclable">Reciclable</option>
                                     <option value="no reciclable">No reciclable</option>
                                 </select>
 
-                                <button type="submit" style={btnStyle('#00978D')}>Guardar Punto</button>
+                                <button type="submit" disabled={cargando} style={btnStyle(cargando ? '#ccc' : '#00978D')}>
+                                    {cargando ? 'Guardando...' : 'Guardar Punto'}
+                                </button>
                             </form>
                         </Popup>
                     </Marker>
                 )}
 
-                {/* Marcadores*/}
+                {/* Marcadores */}
                 {customMarkers.map((marker) => (
                     <Marker key={marker.id} position={marker.position}>
                         <Popup>
-                            <strong>{marker.name}</strong><br/>
-                            {marker.description}<br/>
+                            <strong>Reporte: {marker.id}</strong><br/>
+                            <b>Por:</b> {marker.name}<br/>
+                            <b>Región:</b> {marker.region}<br/>
+                            <b>Tipo:</b> {marker.wasteType}<br/>
+                            <b>Cantidad:</b> {marker.amount}<br/>
+                            <b>Riesgo:</b> {marker.riskLevel}<br/>
                             <small style={{ color: '#888' }}>{marker.timestamp}</small>
                         </Popup>
                     </Marker>
