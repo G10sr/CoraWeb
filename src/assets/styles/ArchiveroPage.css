@@ -7,7 +7,7 @@
   padding: 0;
   overflow: hidden;
   position: relative;
-  background-image: url("../assets/Fondo.png");
+  background-image: url("../img/Fondo.png");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -139,6 +139,14 @@
   align-items: center;
   gap: 0.5rem;
   background: rgba(255, 255, 255, 0.92);
+  cursor: pointer;
+  font: inherit;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.archivero-carousel-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(4, 80, 79, 0.2);
 }
 
 .archivero-carousel-image {
@@ -175,6 +183,16 @@
   border-radius: 8px;
   padding: 0.5rem 0.8rem;
   background: rgba(255, 255, 255, 0.92);
+  width: 100%;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.archivero-list-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(4, 80, 79, 0.18);
 }
 
 .archivero-list-image {
@@ -197,6 +215,350 @@
 
 .archivero-item-region {
   color: rgba(4, 80, 79, 0.85);
+}
+
+.archivero-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(4, 30, 29, 0.62);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(0.75rem, 3vw, 1.5rem);
+  animation: archivero-fade-in 0.25s ease;
+}
+
+@keyframes archivero-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes archivero-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.archivero-modal {
+  position: relative;
+  width: min(540px, 100%);
+  max-height: min(92vh, 860px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #fffef8 0%, #ffffff 38%);
+  border: 1px solid rgba(4, 80, 79, 0.18);
+  border-radius: 24px;
+  box-shadow:
+    0 24px 60px rgba(4, 80, 79, 0.28),
+    0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+  animation: archivero-slide-up 0.3s ease;
+}
+
+.archivero-modal-close {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.85rem;
+  z-index: 3;
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 50%;
+  background: rgba(4, 80, 79, 0.82);
+  color: #fff;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.archivero-modal-close:hover {
+  background: #067a78;
+  transform: scale(1.05);
+}
+
+.archivero-modal-close span {
+  margin-top: -2px;
+}
+
+.archivero-modal-hero {
+  position: relative;
+  flex-shrink: 0;
+  height: clamp(160px, 32vw, 240px);
+  overflow: hidden;
+}
+
+.archivero-modal-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.archivero-modal-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(4, 80, 79, 0.05) 0%,
+    rgba(4, 80, 79, 0.55) 100%
+  );
+  pointer-events: none;
+}
+
+.archivero-modal-region-badge {
+  position: absolute;
+  left: 1rem;
+  bottom: 1rem;
+  z-index: 2;
+  max-width: calc(100% - 5rem);
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(225, 222, 163, 0.95);
+  color: #04504f;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border: 1px solid rgba(4, 80, 79, 0.25);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.archivero-modal-body {
+  flex: 1;
+  min-height: 0;
+  padding: clamp(1rem, 3vw, 1.5rem);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(4, 80, 79, 0.4) transparent;
+}
+
+.archivero-modal-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.archivero-modal-title {
+  margin: 0;
+  color: #04504f;
+  font-size: clamp(1.25rem, 4vw, 1.65rem);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.archivero-modal-description {
+  margin: 0;
+  color: #3d4f4e;
+  font-size: clamp(0.88rem, 2.5vw, 0.98rem);
+  line-height: 1.6;
+}
+
+.archivero-comments {
+  padding: 1rem;
+  border-radius: 16px;
+  background: rgba(225, 222, 163, 0.22);
+  border: 1px solid rgba(4, 80, 79, 0.12);
+}
+
+.archivero-comments-title {
+  margin: 0 0 0.85rem;
+  color: #04504f;
+  font-size: clamp(1rem, 3vw, 1.15rem);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.archivero-comments-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  background: #04504f;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.archivero-comment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.archivero-comment-input,
+.archivero-comment-textarea {
+  width: 100%;
+  border: 1px solid rgba(4, 80, 79, 0.28);
+  border-radius: 12px;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.92rem;
+  font-family: inherit;
+  box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.92);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.archivero-comment-input:focus,
+.archivero-comment-textarea:focus {
+  outline: none;
+  border-color: #04504f;
+  box-shadow: 0 0 0 3px rgba(4, 80, 79, 0.15);
+}
+
+.archivero-comment-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.archivero-comment-submit {
+  width: 100%;
+  border: none;
+  border-radius: 12px;
+  padding: 0.7rem 1rem;
+  background: linear-gradient(135deg, #04504f 0%, #067a78 100%);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.archivero-comment-submit:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(4, 80, 79, 0.3);
+}
+
+.archivero-comments-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  max-height: clamp(140px, 28vh, 260px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(4, 80, 79, 0.35) transparent;
+}
+
+.archivero-comments-empty {
+  color: rgba(4, 80, 79, 0.7);
+  font-size: 0.9rem;
+  font-style: italic;
+  text-align: center;
+  padding: 0.5rem;
+}
+
+.archivero-comment-item {
+  background: #fff;
+  border: 1px solid rgba(4, 80, 79, 0.12);
+  border-radius: 14px;
+  padding: 0.75rem 0.85rem;
+  box-shadow: 0 2px 8px rgba(4, 80, 79, 0.06);
+}
+
+.archivero-comment-item p {
+  margin: 0.4rem 0 0;
+  font-size: 0.9rem;
+  color: #3a4544;
+  line-height: 1.45;
+}
+
+.archivero-comment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+  font-size: 0.82rem;
+  color: #04504f;
+}
+
+.archivero-comment-header strong {
+  font-weight: 700;
+}
+
+.archivero-comment-header time {
+  color: rgba(4, 80, 79, 0.6);
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+@media (min-width: 768px) {
+  .archivero-comment-submit {
+    width: auto;
+    align-self: flex-end;
+    min-width: 180px;
+  }
+}
+
+@media (max-width: 640px) {
+  .archivero-modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .archivero-modal {
+    width: 100%;
+    max-height: 94vh;
+    border-radius: 24px 24px 0 0;
+    animation: archivero-slide-up 0.35s ease;
+  }
+
+  .archivero-modal-hero {
+    height: clamp(140px, 40vw, 200px);
+  }
+
+  .archivero-modal-body {
+    padding: 1rem 1rem 1.25rem;
+  }
+
+  .archivero-comments {
+    padding: 0.85rem;
+  }
+
+  .archivero-comment-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.2rem;
+  }
+
+  .archivero-comment-header time {
+    white-space: normal;
+  }
+}
+
+@media (min-width: 1024px) {
+  .archivero-modal {
+    width: min(580px, 92vw);
+  }
+
+  .archivero-modal-hero {
+    height: 260px;
+  }
+
+  .archivero-comments-list {
+    max-height: 280px;
+  }
 }
 
 @media (max-width: 900px) {

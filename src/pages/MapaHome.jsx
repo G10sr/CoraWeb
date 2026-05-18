@@ -2,27 +2,17 @@ import MyMapComponent from '../components/myMapComponent';
 import '../assets/styles/MapaHome.css';
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import ArchiveroPage from "./ArchiveroPage";
-import Perfil from "./perfil";
 
-function App() {
-    const currentPath = window.location.pathname.toLowerCase();
-
-    if (currentPath === '/archivero') {
-        return <ArchiveroPage />;
-    }
-    if (currentPath === '/perfil') {
-        return <Perfil />;
-    }
+function MapaHome() {
     return (
         <div className="app">
             <Header />
-            <div className="map-container"> 
+            <div className="map-container">
                 <MyMapComponent />
             </div>
-            <Footer /> 
+            <Footer />
         </div>
     );
 }
 
-export default App;
+export default MapaHome;
