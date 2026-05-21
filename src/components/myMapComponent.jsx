@@ -5,7 +5,7 @@ import 'leaflet/dist/leaflet.css';
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
 
 // Importaciones FIREBASE
-import { db } from './firebaseConfig'; 
+import { db } from '../firebase/firebaseConfig'; 
 import { collection, addDoc, serverTimestamp, query, onSnapshot } from "firebase/firestore"; 
 
 // Importación de activos para los marcadores
