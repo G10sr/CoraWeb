@@ -6,12 +6,35 @@ import "../assets/styles/ArchiveroPage.css";
 import basura1 from "../assets/img/basura1.jpg";
 import basura2 from "../assets/img/basura2.jpg";
 import basura3 from "../assets/img/basura3.webp";
+import { db } from "../firebase/firebaseConfig";
+import { collection, onSnapshot, query } from "firebase/firestore";
 
 const imagePool = [basura1, basura2, basura3];
 const allowedRegions = ["Colegio CTP CIT", "Soda armonia"];
 
 const defaultDescription = (name, region) =>
   `${name} es un punto de recoleccion en ${region}. Reporte verificado por la comunidad Cora.`;
+
+const buildFirebaseDescription = (point) => {
+  const parts = [
+    point.wasteType ? `Tipo de residuo: ${point.wasteType}` : null,
+    point.amount ? `Cantidad: ${point.amount}` : null,
+    point.slope ? `Pendiente: ${point.slope}` : null,
+    point.waterProximity ? `Cercania al agua: ${point.waterProximity}` : null,
+    point.riskLevel ? `Riesgo: ${point.riskLevel}` : null,
+    point.materialType ? `Material: ${point.materialType}` : null,
+  ].filter(Boolean);
+  return parts.join(" - ");
+};
+
+const hashStringToIndex = (value, modulo) => {
+  const text = String(value || "");
+  let hash = 0;
+  for (let i = 0; i < text.length; i += 1) {
+    hash = (hash * 31 + text.charCodeAt(i)) >>> 0;
+  }
+  return hash % modulo;
+};
 
 const allPoints = [
   { id: 1, name: "Punto Central", image: logo, region: "Colegio CTP CIT", description: "Punto principal de referencia en el campus. Ideal para depositos organicos y reciclables." },
@@ -44,7 +67,6 @@ const saveComments = (pointId, comments) => {
 
 const carouselSections = ["Carrusel principal", "Puntos frecuentes", "Agregados recientemente"];
 const regionOptions = allowedRegions;
-const storageKey = "archiveroPoints";
 const getItemsPerView = () => {
   if (window.innerWidth <= 640) {
     return 1;
@@ -119,6 +141,29 @@ function PointDetailModal({ point, onClose }) {
             </p>
           </header>
 
+          {(point.wasteType || point.amount || point.slope || point.waterProximity || point.riskLevel || point.materialType) && (
+            <ul className="archivero-modal-details">
+              {point.wasteType && (
+                <li><strong>Tipo de residuo:</strong> {point.wasteType}</li>
+              )}
+              {point.amount !== undefined && point.amount !== null && point.amount !== "" && (
+                <li><strong>Cantidad:</strong> {point.amount}</li>
+              )}
+              {point.slope && (
+                <li><strong>Pendiente:</strong> {point.slope}</li>
+              )}
+              {point.waterProximity && (
+                <li><strong>Cercania al cuerpo de agua:</strong> {point.waterProximity}</li>
+              )}
+              {point.riskLevel && (
+                <li><strong>Riesgo de contaminacion:</strong> {point.riskLevel}</li>
+              )}
+              {point.materialType && (
+                <li><strong>Material:</strong> {point.materialType}</li>
+              )}
+            </ul>
+          )}
+
           <section className="archivero-comments">
             <h3 className="archivero-comments-title">
               Comentarios
@@ -179,32 +224,47 @@ function ArchiveroPage() {
   const [carouselIndexes, setCarouselIndexes] = useState(() =>
     Object.fromEntries(carouselSections.map((sectionTitle) => [sectionTitle, 0])),
   );
-  const [savedPoints] = useState(() => {
-    try {
-      const raw = localStorage.getItem(storageKey);
-      if (!raw) {
-        return [];
-      }
-      const parsed = JSON.parse(raw);
-      if (!Array.isArray(parsed)) {
-        return [];
-      }
-      return parsed.map((point) => {
-        const region = allowedRegions.includes(point.region) ? point.region : "Colegio CTP CIT";
-        return {
-          id: point.id,
-          name: point.name,
-          region,
-          image: imagePool[Math.abs(Number(point.id) || 0) % imagePool.length],
-          description: point.description || defaultDescription(point.name, region),
-        };
-      });
-    } catch {
-      return [];
-    }
-  });
+  const [firebasePoints, setFirebasePoints] = useState([]);
 
-  const mergedPoints = useMemo(() => [...savedPoints, ...allPoints], [savedPoints]);
+  useEffect(() => {
+    const reportesRef = collection(db, "reportes");
+    const q = query(reportesRef);
+    const unsubscribe = onSnapshot(
+      q,
+      (querySnapshot) => {
+        const puntos = [];
+        querySnapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          const region = allowedRegions.includes(data.region) ? data.region : "Colegio CTP CIT";
+          const name = data.reportado_por ? `Reporte de ${data.reportado_por}` : "Reporte sin nombre";
+          const point = {
+            id: docSnap.id,
+            name,
+            region,
+            image: imagePool[hashStringToIndex(docSnap.id, imagePool.length)],
+            wasteType: data.tipo_residuo,
+            amount: data.cantidad,
+            slope: data.pendiente,
+            waterProximity: data.cercania_agua,
+            riskLevel: data.riesgo_contaminacion,
+            materialType: data.clasificacion_material,
+            position: data.latitud && data.longitud ? [data.latitud, data.longitud] : null,
+            createdAt: data.fecha_creacion?.seconds ? data.fecha_creacion.seconds * 1000 : null,
+          };
+          point.description = buildFirebaseDescription(point) || defaultDescription(point.name, region);
+          puntos.push(point);
+        });
+        puntos.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        setFirebasePoints(puntos);
+      },
+      (error) => {
+        console.error("Error al leer puntos de Firebase:", error);
+      },
+    );
+    return () => unsubscribe();
+  }, []);
+
+  const mergedPoints = useMemo(() => [...firebasePoints, ...allPoints], [firebasePoints]);
 
   const filteredPoints = useMemo(() => {
     const normalizedTerm = searchTerm.trim().toLowerCase();
