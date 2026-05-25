@@ -50,7 +50,7 @@ function Profile() {
 
         <section>
           <h2>Sobre Mí</h2>
-          <p>Lorem ipsum dolor sit amet blablabka uehfue e</p>
+          <p>Ahorita me encargo de esto</p>
         </section>
 
         <section>
