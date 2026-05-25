@@ -60,7 +60,7 @@ function Profile() {
               <div className="post-card" key={index}>
                 <div className="post-actions">
                   <span>✎</span>
-                  <span>🗑 </span>
+                  <span>🗑</span>
                 </div>
               </div>
             ))}
