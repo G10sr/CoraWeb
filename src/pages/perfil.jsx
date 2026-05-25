@@ -46,7 +46,7 @@ function Profile() {
       </div>
 
       <div className="content">
-        <h1>Alan Brito</h1>
+        <h1>Francella</h1>
 
         <section>
           <h2>Sobre Mí</h2>
