@@ -1,9 +1,9 @@
 import React from 'react';
 import '../assets/styles/Footer.css'; 
 
-const Footer = () => {
+const Footer = ({ style }) => {
   return (
-    <footer className="footer">
+    <footer className="footer" style={style}>
       <nav className="footer-content">
         <a className="footer-item" href="/">
           <span className="footer-icon">H</span>

@@ -5,9 +5,10 @@ body {
 }
 
 .profile-container {
-  max-width: 420px;
+  height: 100vh;
   margin: auto;
   background-color: #dcdcd2;
+  overflow-y: auto;
 }
 
 /* HEADER */
@@ -87,6 +88,8 @@ p {
   grid-template-columns: repeat(3, 1fr);
   gap: 15px;
   margin-top: 10px;
+    margin-bottom: 100px;
+
 }
 
 .post-card {
@@ -107,4 +110,6 @@ p {
   padding: 2px 6px;
   border-radius: 5px;
   font-size: 12px;
+
 }
+
