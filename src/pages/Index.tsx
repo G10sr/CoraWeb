@@ -8,7 +8,7 @@ const stats = [
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-background flex justify-center">
+    <div className="min-h-screen bg-background flex justify-center page-transition">
       <main className="w-full max-w-md relative pb-10">
         {/* Header */}
         <header className="relative h-72 bg-[hsl(var(--header-bg))] rounded-b-[2.5rem] overflow-hidden">
@@ -40,14 +40,14 @@ const Index = () => {
 
         {/* Name */}
         <section className="px-6 mt-6">
-          <h1 className="text-4xl font-extrabold text-primary underline decoration-2 underline-offset-4 inline-block">
+          <h1 className="text-4xl font-extrabold text-primary underline decoration-2 underline-offset-4 inline-block nature-title">
             Alan Brito
           </h1>
         </section>
 
         {/* About */}
         <section className="px-6 mt-8">
-          <h2 className="text-2xl font-bold text-primary">Sobre Mí</h2>
+          <h2 className="text-2xl font-bold text-primary nature-title">Sobre Mí</h2>
           <p className="text-sm text-primary underline underline-offset-2 mt-1">
             Lore ipsum dolor sit amet blablabka uehfue e
           </p>
@@ -55,7 +55,7 @@ const Index = () => {
 
         {/* Posts */}
         <section className="px-6 mt-8">
-          <h2 className="text-3xl font-bold text-primary">Publicados</h2>
+          <h2 className="text-3xl font-bold text-primary nature-title">Publicados</h2>
           <div className="grid grid-cols-3 gap-3 mt-4">
             {Array.from({ length: 6 }).map((_, i) => (
               <div

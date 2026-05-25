@@ -177,7 +177,7 @@ function MyMapComponent() {
                 gap: '10px', 
                 minWidth: '220px'
             }}>
-                <h2 style={{ margin: '0', fontSize: '1.3rem' }}>Cora Web</h2>
+                <h2 className="nature-title" style={{ margin: '0', fontSize: '1.3rem' }}>Cora Web</h2>
                 
                 <button onClick={activateLocation} style={btnStyle(userPosition ? '#4dcec5' : '#00978D')}>
                     {userPosition ? 'Ubicación Lista' : 'Activar mi ubicación'}

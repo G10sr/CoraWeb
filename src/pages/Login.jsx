@@ -34,9 +34,9 @@ export default function Login() {
   };
 
   return (
-    <div className="container">
+    <div className="container page-transition">
       <form onSubmit={handleSubmit} className="form">
-        <h2 className="title">Iniciar Sesión</h2>
+        <h2 className="title nature-title">Iniciar Sesión</h2>
         
         {error && <p className="error">{error}</p>}
 

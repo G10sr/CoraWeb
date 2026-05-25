@@ -133,7 +133,7 @@ function PointDetailModal({ point, onClose }) {
 
         <div className="archivero-modal-body">
           <header className="archivero-modal-header">
-            <h2 id="archivero-modal-title" className="archivero-modal-title">
+            <h2 id="archivero-modal-title" className="archivero-modal-title nature-title">
               {point.name}
             </h2>
             <p className="archivero-modal-description">
@@ -165,7 +165,7 @@ function PointDetailModal({ point, onClose }) {
           )}
 
           <section className="archivero-comments">
-            <h3 className="archivero-comments-title">
+            <h3 className="archivero-comments-title nature-title">
               Comentarios
               <span className="archivero-comments-count">{comments.length}</span>
             </h3>
@@ -300,7 +300,7 @@ function ArchiveroPage() {
   };
 
   return (
-    <div className="archivero-page">
+    <div className="archivero-page page-transition">
       <Header />
       <div className="archivero-page-content">
         <div className="archivero-search-wrap">
@@ -325,13 +325,13 @@ function ArchiveroPage() {
           </select>
         </div>
 
-        <h1 className="archivero-page-title" contentEditable suppressContentEditableWarning>
+        <h1 className="archivero-page-title nature-title">
           Archivero-Cora
         </h1>
 
         {carouselSections.map((sectionTitle) => (
           <section className="archivero-section" key={sectionTitle}>
-            <h2 className="archivero-section-title">{sectionTitle}</h2>
+            <h2 className="archivero-section-title nature-title">{sectionTitle}</h2>
             <div className="archivero-carousel-base">
               <button
                 className="archivero-carousel-btn"
@@ -377,7 +377,7 @@ function ArchiveroPage() {
           </section>
         ))}
 
-        <h2 className="archivero-all-title">Todos los puntos</h2>
+        <h2 className="archivero-all-title nature-title">Todos los puntos</h2>
         <div className="archivero-list">
           {filteredPoints.map((point) => (
             <button

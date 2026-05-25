@@ -5,7 +5,7 @@ function Profile(){
   const posts = Array(6).fill(null);
 
   return (
-    <div className="profile-container">
+    <div className="profile-container page-transition">
       <div className="header">
         <div className="avatar"></div>
 
@@ -26,15 +26,15 @@ function Profile(){
       </div>
 
       <div className="content">
-        <h1>Alan Brito</h1>
+        <h1 className="nature-title">Alan Brito</h1>
 
         <section>
-          <h2>Sobre Mí</h2>
+          <h2 className="nature-title">Sobre Mí</h2>
           <p>Lorem ipsum dolor sit amet blablabka uehfue e</p>
         </section>
 
         <section>
-          <h2>Publicados</h2>
+          <h2 className="nature-title">Publicados</h2>
           <div className="posts-grid">
             {posts.map((_, index) => (
               <div className="post-card" key={index}>

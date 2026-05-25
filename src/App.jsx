@@ -3,8 +3,8 @@ import './App.css'
 function App() {
   return (
     <>
-      <div className="main">
-        <h1>Archivero</h1>
+      <div className="main page-transition">
+        <h1 className="nature-title">Archivero</h1>
       </div>
 
       <div className="carrousel-section">

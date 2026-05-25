@@ -5,7 +5,7 @@ import Footer from "../components/Footer";
 
 function MapaHome() {
     return (
-        <div className="app">
+        <div className="app page-transition">
             <Header />
             <div className="map-container">
                 <MyMapComponent />
