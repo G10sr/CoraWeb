@@ -1,10 +1,11 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import MapaHome from './MapaHome.jsx'
-import '../assets/styles/MapaHome.css';
+import AppJsx from './App.jsx'
+import './assets/styles/MapaHome.css';
+
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <MapaHome />
+    <AppJsx />
   </React.StrictMode>,
 )
