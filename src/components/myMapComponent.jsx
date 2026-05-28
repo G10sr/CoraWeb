@@ -2,11 +2,31 @@
 import { useState, useEffect } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap, useMapEvents } from 'react-leaflet';
 
 // Importaciones FIREBASE
 import { db } from '../firebase/firebaseConfig'; 
 import { collection, addDoc, serverTimestamp, query, onSnapshot } from "firebase/firestore"; 
+
+// AgenteCora: analisis de riesgo del formulario
+import { analyzeReport } from '../agent/agenteCora';
+import '../assets/styles/AgenteCora.css';
+
+// Rectangulo de calificacion que AgenteCora coloca junto al punto
+function RiskCard({ analysis }) {
+    if (!analysis?.valid) return null;
+    return (
+        <div className="cora-risk-card" style={{ '--risk-hex': analysis.hex }}>
+            <div className="cora-risk-card-head">
+                <span className="cora-risk-dot" />
+                AgenteCora: Riesgo {analysis.nivel}
+            </div>
+            <div className="cora-risk-card-body">
+                <span className="cora-risk-score">{analysis.score}/100</span> &middot; {analysis.recomendacion}
+            </div>
+        </div>
+    );
+}
 
 // Importación de activos para los marcadores
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
@@ -179,12 +199,12 @@ function MyMapComponent() {
             }}>
                 <h2 className="nature-title" style={{ margin: '0', fontSize: '1.3rem' }}>Cora Web</h2>
                 
-                <button onClick={activateLocation} style={btnStyle(userPosition ? '#4dcec5' : '#00978D')}>
+                <button data-tour="location" onClick={activateLocation} style={btnStyle(userPosition ? '#4dcec5' : '#00978D')}>
                     {userPosition ? 'Ubicación Lista' : 'Activar mi ubicación'}
                 </button>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <button onClick={() => setIsAddingMode(true)} style={btnStyle(isAddingMode ? '#A7BD8A' : '#688f35')}>
+                    <button data-tour="register" onClick={() => setIsAddingMode(true)} style={btnStyle(isAddingMode ? '#A7BD8A' : '#688f35')}>
                         Registrar punto de localización de residuos
                     </button>
                     {isAddingMode && (
@@ -289,6 +309,17 @@ function MyMapComponent() {
                                     <option value="no reciclable">No reciclable</option>
                                 </select>
 
+                                {(() => {
+                                    const preview = analyzeReport(formData);
+                                    if (!preview.valid) return null;
+                                    return (
+                                        <div className="cora-form-risk" style={{ '--risk-hex': preview.hex }}>
+                                            <strong>AgenteCora: Riesgo {preview.nivel} ({preview.score}/100)</strong>
+                                            {preview.recomendacion}
+                                        </div>
+                                    );
+                                })()}
+
                                 <button type="submit" disabled={cargando} style={btnStyle(cargando ? '#ccc' : '#00978D')}>
                                     {cargando ? 'Guardando...' : 'Guardar Punto'}
                                 </button>
@@ -298,19 +329,36 @@ function MyMapComponent() {
                 )}
 
                 {/* Marcadores */}
-                {customMarkers.map((marker) => (
-                    <Marker key={marker.id} position={marker.position}>
-                        <Popup>
-                            <strong>Reporte: {marker.id}</strong><br/>
-                            <b>Por:</b> {marker.name}<br/>
-                            <b>Región:</b> {marker.region}<br/>
-                            <b>Tipo:</b> {marker.wasteType}<br/>
-                            <b>Cantidad:</b> {marker.amount}<br/>
-                            <b>Riesgo:</b> {marker.riskLevel}<br/>
-                            <small style={{ color: '#888' }}>{marker.timestamp}</small>
-                        </Popup>
-                    </Marker>
-                ))}
+                {customMarkers.map((marker) => {
+                    const analysis = analyzeReport(marker);
+                    return (
+                        <Marker key={marker.id} position={marker.position}>
+                            {analysis.valid && (
+                                <Tooltip permanent direction="right" offset={[12, 0]} className="cora-risk-tooltip">
+                                    <RiskCard analysis={analysis} />
+                                </Tooltip>
+                            )}
+                            <Popup>
+                                <strong>Reporte: {marker.id}</strong><br/>
+                                <b>Por:</b> {marker.name}<br/>
+                                <b>Región:</b> {marker.region}<br/>
+                                <b>Tipo:</b> {marker.wasteType}<br/>
+                                <b>Cantidad:</b> {marker.amount}<br/>
+                                <b>Riesgo declarado:</b> {marker.riskLevel}<br/>
+                                {analysis.valid && (
+                                    <>
+                                        <hr style={{ margin: '6px 0' }} />
+                                        <b style={{ color: analysis.hex }}>
+                                            AgenteCora: Riesgo {analysis.nivel} ({analysis.score}/100)
+                                        </b><br/>
+                                        <span style={{ fontSize: '0.8rem' }}>{analysis.recomendacion}</span><br/>
+                                    </>
+                                )}
+                                <small style={{ color: '#888' }}>{marker.timestamp}</small>
+                            </Popup>
+                        </Marker>
+                    );
+                })}
             </MapContainer>
         </div>
     );

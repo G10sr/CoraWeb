@@ -1,31 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import logo from "../assets/img/CoraLogo.png";
 import "../assets/styles/ArchiveroPage.css";
 import basura1 from "../assets/img/basura1.jpg";
 import basura2 from "../assets/img/basura2.jpg";
 import basura3 from "../assets/img/basura3.webp";
 import { db } from "../firebase/firebaseConfig";
 import { collection, onSnapshot, query } from "firebase/firestore";
+import { analyzeReport } from "../agent/agenteCora";
+import "../assets/styles/AgenteCora.css";
 
 const imagePool = [basura1, basura2, basura3];
 const allowedRegions = ["Colegio CTP CIT", "Soda armonia"];
 
 const defaultDescription = (name, region) =>
   `${name} es un punto de recoleccion en ${region}. Reporte verificado por la comunidad Cora.`;
-
-const buildFirebaseDescription = (point) => {
-  const parts = [
-    point.wasteType ? `Tipo de residuo: ${point.wasteType}` : null,
-    point.amount ? `Cantidad: ${point.amount}` : null,
-    point.slope ? `Pendiente: ${point.slope}` : null,
-    point.waterProximity ? `Cercania al agua: ${point.waterProximity}` : null,
-    point.riskLevel ? `Riesgo: ${point.riskLevel}` : null,
-    point.materialType ? `Material: ${point.materialType}` : null,
-  ].filter(Boolean);
-  return parts.join(" - ");
-};
 
 const hashStringToIndex = (value, modulo) => {
   const text = String(value || "");
@@ -35,18 +24,6 @@ const hashStringToIndex = (value, modulo) => {
   }
   return hash % modulo;
 };
-
-const allPoints = [
-  { id: 1, name: "Punto Central", image: logo, region: "Colegio CTP CIT", description: "Punto principal de referencia en el campus. Ideal para depositos organicos y reciclables." },
-  { id: 2, name: "Punto Norte", image: basura1, region: "Colegio CTP CIT", description: "Zona norte del colegio con alta afluencia estudiantil. Se recomienda separar plastico y carton." },
-  { id: 3, name: "Punto Sur", image: basura2, region: "Soda armonia", description: "Ubicado cerca de la soda. Punto frecuente para residuos de consumo diario." },
-  { id: 4, name: "Punto Este", image: basura3, region: "Colegio CTP CIT", description: "Area este con buena visibilidad. Punto activo para reportes de la comunidad." },
-  { id: 5, name: "Punto Oeste", image: basura2, region: "Soda armonia", description: "Punto oeste con acceso rapido desde la entrada lateral." },
-  { id: 6, name: "Punto Plaza", image: basura1, region: "Soda armonia", description: "En la plaza central. Espacio abierto para recoleccion mixta controlada." },
-  { id: 7, name: "Punto Parque", image: basura3, region: "Colegio CTP CIT", description: "Junto al area verde. Prioridad en residuos organicos y material reciclable." },
-  { id: 8, name: "Punto Colegio", image: basura1, region: "Soda armonia", description: "Frente al edificio principal. Punto de facil acceso para estudiantes." },
-  { id: 9, name: "Punto Mercado", image: basura2, region: "Soda armonia", description: "Cerca del mercado escolar. Alto volumen de envases y empaques." },
-];
 
 const commentsStorageKey = (pointId) => `archiveroComments_${pointId}`;
 
@@ -164,6 +141,13 @@ function PointDetailModal({ point, onClose }) {
             </ul>
           )}
 
+          {point.analysis?.valid && (
+            <div className="cora-form-risk" style={{ "--risk-hex": point.analysis.hex }}>
+              <strong>AgenteCora: Riesgo {point.analysis.nivel} ({point.analysis.score}/100)</strong>
+              {point.analysis.recomendacion}
+            </div>
+          )}
+
           <section className="archivero-comments">
             <h3 className="archivero-comments-title nature-title">
               Comentarios
@@ -251,7 +235,8 @@ function ArchiveroPage() {
             position: data.latitud && data.longitud ? [data.latitud, data.longitud] : null,
             createdAt: data.fecha_creacion?.seconds ? data.fecha_creacion.seconds * 1000 : null,
           };
-          point.description = buildFirebaseDescription(point) || defaultDescription(point.name, region);
+          point.description = defaultDescription(point.name, region);
+          point.analysis = analyzeReport(point);
           puntos.push(point);
         });
         puntos.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
@@ -264,7 +249,7 @@ function ArchiveroPage() {
     return () => unsubscribe();
   }, []);
 
-  const mergedPoints = useMemo(() => [...firebasePoints, ...allPoints], [firebasePoints]);
+  const mergedPoints = firebasePoints;
 
   const filteredPoints = useMemo(() => {
     const normalizedTerm = searchTerm.trim().toLowerCase();
@@ -356,10 +341,16 @@ function ArchiveroPage() {
                       className="archivero-carousel-item"
                       key={`${sectionTitle}-${point.id}`}
                       onClick={() => setSelectedPoint(point)}
+                      style={point.analysis?.valid ? { borderBottom: `5px solid ${point.analysis.hex}` } : undefined}
                     >
                       <img className="archivero-carousel-image" src={point.image} alt={point.name} />
                       <span>{point.name}</span>
                       <small className="archivero-item-region">{point.region}</small>
+                      {point.analysis?.valid && (
+                        <span className="archivero-risk-pill" style={{ background: point.analysis.hex }}>
+                          Riesgo {point.analysis.nivel}
+                        </span>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -385,12 +376,18 @@ function ArchiveroPage() {
               className="archivero-list-item"
               key={point.id}
               onClick={() => setSelectedPoint(point)}
+              style={point.analysis?.valid ? { borderLeft: `6px solid ${point.analysis.hex}` } : undefined}
             >
               <img className="archivero-list-image" src={point.image} alt={point.name} />
               <div className="archivero-list-text">
                 <span className="archivero-list-name">{point.name}</span>
                 <small className="archivero-item-region">{point.region}</small>
               </div>
+              {point.analysis?.valid && (
+                <span className="archivero-risk-pill" style={{ background: point.analysis.hex }}>
+                  Riesgo {point.analysis.nivel}
+                </span>
+              )}
             </button>
           ))}
         </div>

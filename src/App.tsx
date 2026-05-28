@@ -3,6 +3,8 @@ import MapaHome from "./pages/MapaHome.jsx";
 import ArchiveroPage from "./pages/ArchiveroPage.jsx";
 import Perfil from "./pages/perfil.jsx";
 import NotFound from "./pages/NotFound.tsx";
+import AgenteCoraChat from "./components/AgenteCoraChat.jsx";
+import CoraTour from "./components/CoraTour.jsx";
 
 const App = () => (
   <BrowserRouter>
@@ -12,6 +14,8 @@ const App = () => (
       <Route path="/perfil" element={<Perfil />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
+    <AgenteCoraChat />
+    <CoraTour />
   </BrowserRouter>
 );
 
