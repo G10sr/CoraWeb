@@ -28,8 +28,7 @@ function Profile() {
 
   console.log("Posts verificados:", verifiedPosts);
   return (
-    <div className="profile-container">
-      <Header />
+    <div className="profile-container page-transition">
       <div className="header">
         <div className="avatar"></div>
 
@@ -54,7 +53,7 @@ function Profile() {
         </section>
 
         <section>
-          <h2>Publicados</h2>
+          <h2 className="nature-title">Publicados</h2>
           <div className="posts-grid">
             {posts.map((_, index) => (
               <div className="post-card" key={index}>

@@ -1,0 +1,98 @@
+.cora-tour {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  pointer-events: none;
+}
+
+.cora-tour-dim {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  pointer-events: auto;
+}
+
+.cora-tour-spotlight {
+  position: fixed;
+  border-radius: 12px;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6);
+  border: 3px solid #4dcec5;
+  transition: all 0.25s ease;
+  pointer-events: none;
+}
+
+.cora-tour-tip {
+  position: fixed;
+  width: 300px;
+  max-width: calc(100vw - 28px);
+  background: #fff;
+  border-radius: 14px;
+  padding: 16px 16px 12px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.4);
+  pointer-events: auto;
+}
+
+.cora-tour-x {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  background: transparent;
+  border: none;
+  font-size: 1.3rem;
+  line-height: 1;
+  color: #789;
+  cursor: pointer;
+}
+
+.cora-tour-title {
+  display: block;
+  color: #00978D;
+  font-size: 1.05rem;
+  margin-bottom: 6px;
+  padding-right: 18px;
+}
+
+.cora-tour-text {
+  margin: 0 0 12px;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  color: #2a3a2f;
+}
+
+.cora-tour-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cora-tour-count {
+  font-size: 0.78rem;
+  color: #8a9a90;
+}
+
+.cora-tour-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.cora-tour-btn {
+  border: none;
+  background: #00978D;
+  color: #fff;
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.cora-tour-btn:hover {
+  background: #4dcec5;
+}
+.cora-tour-btn.ghost {
+  background: transparent;
+  color: #00978D;
+  border: 1px solid #00978D;
+}
+.cora-tour-btn.ghost:hover {
+  background: #eef7f5;
+}

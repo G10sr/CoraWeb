@@ -3,7 +3,7 @@ import '../assets/styles/Footer.css';
 
 const Footer = ({ style }) => {
   return (
-    <footer className="footer" style={style}>
+    <footer className="footer" data-tour="footer">
       <nav className="footer-content">
         <a className="footer-item" href="/">
           <span className="footer-icon">H</span>
