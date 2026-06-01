@@ -113,3 +113,10 @@ p {
 
 }
 
+.avatar{
+  overflow: hidden;
+  img {
+    height: 110%;
+    object-fit: cover;
+  }
+}
