@@ -86,7 +86,7 @@ function MyMapComponent() {
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify({
-                        id: "fad9312f-7005-41ad-89b4-bada3e8deba6",
+                        id: "edd33b43-0cb5-477a-b574-8ae8949cd5bf",
                     }),
                 }
             );

@@ -286,7 +286,6 @@ function ArchiveroPage() {
 
   return (
     <div className="archivero-page page-transition">
-      <Header />
       <div className="archivero-page-content">
         <div className="archivero-search-wrap">
           <input
@@ -395,7 +394,6 @@ function ArchiveroPage() {
       {selectedPoint && (
         <PointDetailModal point={selectedPoint} onClose={() => setSelectedPoint(null)} />
       )}
-      <Footer />
     </div>
   );
 }
