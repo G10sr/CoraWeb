@@ -1,53 +1,73 @@
-import React from "react";
+import "../App.css";
 
-function Profile(){
+function App() {
   const posts = Array(6).fill(null);
 
   return (
-    <div className="profile-container page-transition">
-      <div className="header">
-        <div className="avatar"></div>
+    <div className="profile-page">
 
-        <div className="stats">
-          <div>
-            <strong>10</strong>
-            <span>Posts</span>
+      {/* Header */}
+      <header className="banner">
+        <button className="back-btn">&lt;</button>
+
+        <div className="profile-picture">
+          <img
+            src="https://placehold.co/150x150"
+            alt="Profile"
+          />
+        </div>
+      </header>
+
+      {/* Profile Info */}
+      <section className="profile-info">
+
+        <div className="stats-container">
+          <div className="stat verified">
+            <h2>10</h2>
+            <p>Verified</p>
           </div>
-          <div>
-            <strong>10</strong>
-            <span>Verificados</span>
-          </div>
-          <div>
-            <strong>10</strong>
-            <span>Conexiones</span>
+
+          <div className="stat connections">
+            <h2>10</h2>
+            <p>Connections</p>
           </div>
         </div>
-      </div>
 
-      <div className="content">
-        <h1 className="nature-title">Alan Brito</h1>
+        <h1>Alan Brito</h1>
 
-        <section>
-          <h2 className="nature-title">Sobre Mí</h2>
-          <p>Lorem ipsum dolor sit amet blablabka uehfue e</p>
+        <section className="about-section">
+          <h2>About Me</h2>
+
+          <p>
+            Lorem ipsum dolor sit amet consectetur adipisicing elit.
+          </p>
+
+          <button>Edit About Me</button>
         </section>
 
-        <section>
-          <h2 className="nature-title">Publicados</h2>
+        <section className="posts-section">
+          <h2>Posts</h2>
+
           <div className="posts-grid">
             {posts.map((_, index) => (
-              <div className="post-card" key={index}>
+              <div key={index} className="post-card">
+
                 <div className="post-actions">
-                  <span>✎</span>
-                  <span>🗑</span>
+                  <button>✓</button>
+                  <button>✎</button>
+                  <button>🗑</button>
                 </div>
+
               </div>
             ))}
           </div>
+
         </section>
-      </div>
+
+      </section>
+
     </div>
   );
-};
+}
 
-export default Profile;
+export default App;
