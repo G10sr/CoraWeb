@@ -3,12 +3,58 @@ import "../assets/styles/perfil.css";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useEffect, useState } from "react";
+import usr_img from "../assets/img/usr_unk.jpeg";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../firebase/firebaseConfig";
+import { MapContainer, TileLayer, Marker } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import { useNavigate } from "react-router-dom";
+
+function MiniMap({ position }) {
+  const navigate = useNavigate();
+
+  if (!position) return null;
+
+  const handleClick = () => {
+    navigate("/", {
+      state: { focus: position }
+    });
+  };
+
+  return (
+    <div
+      onClick={handleClick}
+      style={{
+        height: "120px",
+        width: "100%",
+        borderRadius: "10px",
+        overflow: "hidden",
+        cursor: "pointer"
+      }}
+    >
+      <MapContainer
+        center={position}
+        zoom={15}
+        style={{ height: "100%", width: "100%" }}
+        zoomControl={false}
+        dragging={false}
+        scrollWheelZoom={false}
+        doubleClickZoom={false}
+        touchZoom={false}
+        attributionControl={false}
+      >
+        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        <Marker position={position} />
+      </MapContainer>
+    </div>
+  );
+}
 
 function Profile() {
   let verifiedPosts = 0;
 
 
-
+  const [posts, setPosts] = useState([]);
   const [perfil, setPerfil] = useState(null);
 
   useEffect(() => {
@@ -42,12 +88,51 @@ function Profile() {
   }
 
 
-    // Crear 80 posts con verified en false por defecto
-const posts = (perfil?.puntos_registrados ?? []).map((punto, i) => ({
-  ...punto,
-  index: i,
-  verified: false,
-}));
+  useEffect(() => {
+    if (perfil?.puntos_registrados?.length > 0) {
+      cargarPostsFirebase();
+    }
+  }, [perfil]);
+
+  async function cargarPostsFirebase() {
+    try {
+      const postsFirebase = await Promise.all(
+        perfil.puntos_registrados.map(async (postId, index) => {
+          const docRef = doc(db, "reportes", postId);
+          const docSnap = await getDoc(docRef);
+
+          if (!docSnap.exists()) {
+            console.warn(`No existe el reporte ${postId}`);
+            return null;
+          }
+
+          const data = docSnap.data();
+
+          return {
+            id: docSnap.id,
+            index,
+            verified: data.verified || false,
+            position: [data.latitud, data.longitud],
+            name: data.reportado_por || "Anónimo",
+            region: data.region,
+            wasteType: data.tipo_residuo,
+            amount: data.cantidad,
+            slope: data.pendiente,
+            waterProximity: data.cercania_agua,
+            riskLevel: data.riesgo_contaminacion,
+            materialType: data.clasificacion_material,
+            timestamp: data.fecha_creacion
+              ? new Date(data.fecha_creacion.seconds * 1000).toLocaleTimeString()
+              : new Date().toLocaleTimeString(),
+          };
+        })
+      );
+
+      setPosts(postsFirebase.filter(post => post !== null));
+    } catch (error) {
+      console.error("Error cargando posts:", error);
+    }
+  }
 
 
   // Contar los verificados
@@ -62,7 +147,7 @@ const posts = (perfil?.puntos_registrados ?? []).map((punto, i) => ({
     <div className="profile-container page-transition">
       <div className="header">
         <div className="avatar">
-          <img src={perfil ? perfil.perfil_img : "https://via.placeholder.com/150"} alt="Avatar" />
+          <img src={perfil ? perfil.perfil_img : usr_img} alt="Avatar" />
         </div>
 
         <div className="stats">
@@ -90,6 +175,19 @@ const posts = (perfil?.puntos_registrados ?? []).map((punto, i) => ({
           <div className="posts-grid">
             {posts.map((post, index) => (
               <div className="post-card" key={index}>
+                <div className={`verification-status ${post.verified ? 'verified' : 'unverified'}`}>
+                  {post.verified ? 'Verificado' : 'No verificado'}
+                </div>
+                <div className="mini-map-wrapper">
+                  <MiniMap position={post.position} />
+                </div>
+                <div className="post-info">
+                  <p><strong>Región:</strong> {post.region}</p>
+                  <p><strong>Tipo de Residuo:</strong> {post.wasteType}</p>
+                  <p><strong>Cantidad:</strong> {post.amount}</p>
+                  <p><strong>Reportado por:</strong> {post.name}</p>
+                  <p><strong>Fecha:</strong> {post.timestamp}</p>
+                </div>
                 <div className="post-actions">
                   <span>✎</span>
                   <span>🗑</span>

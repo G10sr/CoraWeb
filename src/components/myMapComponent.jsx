@@ -5,12 +5,15 @@ import 'leaflet/dist/leaflet.css';
 import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap, useMapEvents } from 'react-leaflet';
 
 // Importaciones FIREBASE
-import { db } from '../firebase/firebaseConfig'; 
-import { collection, addDoc, serverTimestamp, query, onSnapshot } from "firebase/firestore"; 
+import { db } from '../firebase/firebaseConfig';
+import { collection, addDoc, serverTimestamp, query, onSnapshot } from "firebase/firestore";
 
 // AgenteCora: analisis de riesgo del formulario
 import { analyzeReport } from '../agent/agenteCora';
 import '../assets/styles/AgenteCora.css';
+
+import { useLocation } from "react-router-dom";
+
 
 // Rectangulo de calificacion que AgenteCora coloca junto al punto
 function RiskCard({ analysis }) {
@@ -63,15 +66,46 @@ function RecenterMap({ position }) {
 
 // --- COMPONENTE PRINCIPAL ---
 function MyMapComponent() {
+    const location = useLocation();
+    const focusPoint = location.state?.focus;
     const [userPosition, setUserPosition] = useState(null);
-    const [customMarkers, setCustomMarkers] = useState([]); 
+    const [customMarkers, setCustomMarkers] = useState([]);
     const [isAddingMode, setIsAddingMode] = useState(false);
-    const [cargando, setCargando] = useState(false); 
+    const [cargando, setCargando] = useState(false);
     const regionOptions = ["Colegio CTP CIT", "Soda armonia"];
-    
-    const [tempMarker, setTempMarker] = useState(null); 
-    const [formData, setFormData] = useState({ 
-        name: '', 
+    const [perfil, setPerfil] = useState(null);
+
+
+    async function cargarPerfil() {
+        try {
+            const response = await fetch(
+                "http://localhost:3000/api/load-perfil",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        id: "fad9312f-7005-41ad-89b4-bada3e8deba6",
+                    }),
+                }
+            );
+
+            const data = await response.json();
+
+            console.log("Respuesta completa:", data);
+            console.log("Perfil:", data.perfil);
+            console.log("Nombre:", data.perfil?.nombre);
+
+            setPerfil(data.perfil);
+
+        } catch (error) {
+            console.error(error);
+        }
+    }
+    const [tempMarker, setTempMarker] = useState(null);
+    const [formData, setFormData] = useState({
+        name: '',
         region: regionOptions[0],
         wasteType: 'organico',
         amount: '',
@@ -80,6 +114,25 @@ function MyMapComponent() {
         riskLevel: 'bajo',
         materialType: 'reciclable'
     });
+    useEffect(() => {
+        if (perfil) {
+            setFormData(prev => ({
+                ...prev,
+                name: perfil.nombre || ''
+            }));
+        }
+    }, [perfil]);
+    useEffect(() => {
+        if (focusPoint) {
+            setUserPosition(focusPoint);
+        }
+    }, [focusPoint]);
+
+    useEffect(() => {
+        if (tempMarker) {
+            cargarPerfil();
+        }
+    }, [tempMarker]);
 
     useEffect(() => {
         const reportesRef = collection(db, "reportes");
@@ -87,15 +140,16 @@ function MyMapComponent() {
 
         const unsubscribe = onSnapshot(q, (querySnapshot) => {
             const puntosFirebase = [];
-            
+
             querySnapshot.forEach((doc) => {
                 const data = doc.data();
                 if (data.latitud && data.longitud) {
                     puntosFirebase.push({
-                        id: doc.id, 
+                        id: doc.id,
                         position: [data.latitud, data.longitud],
                         name: data.reportado_por || 'Anónimo',
                         region: data.region,
+                        verified: false,
                         wasteType: data.tipo_residuo,
                         amount: data.cantidad,
                         slope: data.pendiente,
@@ -126,8 +180,8 @@ function MyMapComponent() {
     };
 
     const handleMapClick = (latlng) => {
-        setFormData({ 
-            name: '', 
+        setFormData({
+            name: '',
             region: regionOptions[0],
             wasteType: 'organico',
             amount: '',
@@ -135,7 +189,7 @@ function MyMapComponent() {
             waterProximity: '˂50m',
             riskLevel: 'bajo',
             materialType: 'reciclable'
-        }); 
+        });
         setTempMarker({
             position: [latlng.lat, latlng.lng],
             timestamp: new Date().toLocaleTimeString()
@@ -169,7 +223,7 @@ function MyMapComponent() {
             });
 
             alert("¡Reporte guardado exitosamente en Firebase!");
-            setTempMarker(null); 
+            setTempMarker(null);
 
         } catch (error) {
             console.error("Error al guardar en Firebase:", error);
@@ -181,24 +235,24 @@ function MyMapComponent() {
 
     return (
         <div style={{ position: 'relative', height: '100vh', width: '100vw' }}>
-            
+
             {/* Cuadro Flotante - UI */}
             <div style={{
-                position: 'fixed', 
-                top: '80px',   
-                left: '20px', 
-                zIndex: 1000, 
-                backgroundColor: 'white', 
-                padding: '20px', 
+                position: 'fixed',
+                top: '80px',
+                left: '20px',
+                zIndex: 1000,
+                backgroundColor: 'white',
+                padding: '20px',
                 borderRadius: '12px',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.3)', 
+                boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
                 display: 'flex',
-                flexDirection: 'column', 
-                gap: '10px', 
+                flexDirection: 'column',
+                gap: '10px',
                 minWidth: '220px'
             }}>
                 <h2 className="nature-title" style={{ margin: '0', fontSize: '1.3rem' }}>Cora Web</h2>
-                
+
                 <button data-tour="location" onClick={activateLocation} style={btnStyle(userPosition ? '#4dcec5' : '#00978D')}>
                     {userPosition ? 'Ubicación Lista' : 'Activar mi ubicación'}
                 </button>
@@ -231,33 +285,33 @@ function MyMapComponent() {
                 {tempMarker && (
                     <Marker position={tempMarker.position}>
                         <Popup onClose={() => setTempMarker(null)}>
-                
+
                             <form onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '200px' }}>
                                 <strong style={{ textAlign: 'center', borderBottom: '1px solid #eee', paddingBottom: '5px' }}>Detalles del Reporte</strong>
-                                
-                                <label style={{fontSize: '0.8rem'}}>Reportado por:</label>
-                                <input 
+
+                                <label style={{ fontSize: '0.8rem' }}>Reportado por:</label>
+                                <input
                                     type="text"
-                                    placeholder="Tu nombre" 
+                                    placeholder="Tu nombre"
                                     value={formData.name}
-                                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                     style={{ padding: '5px' }}
                                 />
 
-                                <label style={{fontSize: '0.8rem'}}>Región:</label>
+                                <label style={{ fontSize: '0.8rem' }}>Región:</label>
                                 <select
                                     value={formData.region}
-                                    onChange={(e) => setFormData({...formData, region: e.target.value})}
+                                    onChange={(e) => setFormData({ ...formData, region: e.target.value })}
                                     style={{ padding: '5px' }}
                                 >
                                     {regionOptions.map((region) => (
                                         <option value={region} key={region}>{region}</option>
                                     ))}
                                 </select>
-                                
+
                                 {/* Tipo de Residuo */}
-                                <label style={{fontSize: '0.8rem'}}>Tipo de residuo:</label>
-                                <select value={formData.wasteType} onChange={(e) => setFormData({...formData, wasteType: e.target.value})} style={{ padding: '5px' }}>
+                                <label style={{ fontSize: '0.8rem' }}>Tipo de residuo:</label>
+                                <select value={formData.wasteType} onChange={(e) => setFormData({ ...formData, wasteType: e.target.value })} style={{ padding: '5px' }}>
                                     <option value="organico">Orgánico</option>
                                     <option value="plastico">Plástico</option>
                                     <option value="vidrio">Vidrio</option>
@@ -265,21 +319,21 @@ function MyMapComponent() {
                                     <option value="carton">Cartón</option>
                                     <option value="papel">Papel</option>
                                 </select>
-                                
+
                                 {/* Cantidad de Residuos */}
-                                <label style={{fontSize: '0.8rem'}}>Cantidad de residuos:</label>
-                                <input 
+                                <label style={{ fontSize: '0.8rem' }}>Cantidad de residuos:</label>
+                                <input
                                     type="number"
                                     placeholder="Cantidad"
-                                    min="0" 
+                                    min="0"
                                     value={formData.amount}
-                                    onChange={(e) => setFormData({...formData, amount: e.target.value})}
+                                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                                     style={{ padding: '5px' }}
                                 />
 
                                 {/* Pendiente */}
-                                <label style={{fontSize: '0.8rem'}}>Pendiente:</label>
-                                <select value={formData.slope} onChange={(e) => setFormData({...formData, slope: e.target.value})} style={{ padding: '5px' }}>
+                                <label style={{ fontSize: '0.8rem' }}>Pendiente:</label>
+                                <select value={formData.slope} onChange={(e) => setFormData({ ...formData, slope: e.target.value })} style={{ padding: '5px' }}>
                                     <option value="plano">Plano</option>
                                     <option value="leve">Leve</option>
                                     <option value="pronunciada">Pronunciada</option>
@@ -287,24 +341,24 @@ function MyMapComponent() {
                                 </select>
 
                                 {/* Cercania a Cuerpos de agua */}
-                                <label style={{fontSize: '0.8rem'}}>Cercanía al cuerpo de agua:</label>
-                                <select value={formData.waterProximity} onChange={(e) => setFormData({...formData, waterProximity: e.target.value})} style={{ padding: '5px' }}>
+                                <label style={{ fontSize: '0.8rem' }}>Cercanía al cuerpo de agua:</label>
+                                <select value={formData.waterProximity} onChange={(e) => setFormData({ ...formData, waterProximity: e.target.value })} style={{ padding: '5px' }}>
                                     <option value="˂50m">˂50m</option>
                                     <option value="≥100m">≥100m</option>
                                     <option value="≥500m">≥500m</option>
                                 </select>
 
                                 {/* Riesgo de contaminación */}
-                                <label style={{fontSize: '0.8rem'}}>Riesgo de contaminación:</label>
-                                <select value={formData.riskLevel} onChange={(e) => setFormData({...formData, riskLevel: e.target.value})} style={{ padding: '5px' }}>
+                                <label style={{ fontSize: '0.8rem' }}>Riesgo de contaminación:</label>
+                                <select value={formData.riskLevel} onChange={(e) => setFormData({ ...formData, riskLevel: e.target.value })} style={{ padding: '5px' }}>
                                     <option value="bajo">Bajo</option>
                                     <option value="medio">Medio</option>
                                     <option value="alto">Alto</option>
                                 </select>
 
                                 {/* Tipo de Material */}
-                                <label style={{fontSize: '0.8rem'}}>El material clasifica como:</label>
-                                <select value={formData.materialType} onChange={(e) => setFormData({...formData, materialType: e.target.value})} style={{ padding: '5px' }}>
+                                <label style={{ fontSize: '0.8rem' }}>El material clasifica como:</label>
+                                <select value={formData.materialType} onChange={(e) => setFormData({ ...formData, materialType: e.target.value })} style={{ padding: '5px' }}>
                                     <option value="reciclable">Reciclable</option>
                                     <option value="no reciclable">No reciclable</option>
                                 </select>
@@ -339,19 +393,19 @@ function MyMapComponent() {
                                 </Tooltip>
                             )}
                             <Popup>
-                                <strong>Reporte: {marker.id}</strong><br/>
-                                <b>Por:</b> {marker.name}<br/>
-                                <b>Región:</b> {marker.region}<br/>
-                                <b>Tipo:</b> {marker.wasteType}<br/>
-                                <b>Cantidad:</b> {marker.amount}<br/>
-                                <b>Riesgo declarado:</b> {marker.riskLevel}<br/>
+                                <strong>Reporte: {marker.id}</strong><br />
+                                <b>Por:</b> {marker.name}<br />
+                                <b>Región:</b> {marker.region}<br />
+                                <b>Tipo:</b> {marker.wasteType}<br />
+                                <b>Cantidad:</b> {marker.amount}<br />
+                                <b>Riesgo declarado:</b> {marker.riskLevel}<br />
                                 {analysis.valid && (
                                     <>
                                         <hr style={{ margin: '6px 0' }} />
                                         <b style={{ color: analysis.hex }}>
                                             AgenteCora: Riesgo {analysis.nivel} ({analysis.score}/100)
-                                        </b><br/>
-                                        <span style={{ fontSize: '0.8rem' }}>{analysis.recomendacion}</span><br/>
+                                        </b><br />
+                                        <span style={{ fontSize: '0.8rem' }}>{analysis.recomendacion}</span><br />
                                     </>
                                 )}
                                 <small style={{ color: '#888' }}>{marker.timestamp}</small>
