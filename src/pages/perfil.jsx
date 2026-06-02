@@ -1,4 +1,4 @@
-import "../App.css";
+import "../../assets/styles/perfil/perfil.css";
 
 function App() {
   const posts = Array(6).fill(null);
