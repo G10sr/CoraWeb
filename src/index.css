@@ -97,15 +97,6 @@ All colors MUST be HSL.
   }
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-
-  body {
-    @apply bg-background text-foreground;
-  }
-}
 
 .nature-title.nature-title {
   color: #04504f;
