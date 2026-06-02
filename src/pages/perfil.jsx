@@ -1,5 +1,4 @@
 import React from "react";
-import "../assets/styles/perfil.css";
 
 function Profile(){
   const posts = Array(6).fill(null);
