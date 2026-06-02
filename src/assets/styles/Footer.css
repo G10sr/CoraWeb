@@ -31,8 +31,7 @@
   justify-content: center;
   width: 28px;
   height: 28px;
-  border: 1px solid #ffffff;
-  border-radius: 50%;
+  filter: invert();
   font-size: 0.8rem;
   font-weight: 700;
 }

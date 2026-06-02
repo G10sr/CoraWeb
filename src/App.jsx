@@ -10,7 +10,7 @@ import Home from "./pages/Home"
 import ArchiveroPage from "./pages/ArchiveroPage"
 import Perfil from "./pages/perfil"
 import Agente from "./components/AgenteCoraChat"
-
+import NotFound from "./pages/NotFound";
 
 
 
@@ -23,6 +23,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/archivero" element={<ArchiveroPage />} />
         <Route path="/perfil" element={<Perfil />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
       <Footer />
       <Agente />

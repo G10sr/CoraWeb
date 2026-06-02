@@ -101,7 +101,11 @@ p {
   min-height: 280px;
   max-height: 320px;
   overflow: scroll;
+  overflow-x: hidden;
   padding-inline : 12px;
+}
+.post-card::-webkit-scrollbar {
+  width: 0;
 }
 
 .post-actions {
