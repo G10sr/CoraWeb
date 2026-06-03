@@ -1,184 +1,529 @@
+/* =========================
+   GLOBAL
+========================= */
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-body {
-  background: #ecece4;
-  font-family: Arial, sans-serif;
-}
-
 .profile-page {
-  min-height: 100vh;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
 }
 
-/* Banner */
-
-.banner {
-  height: 220px;
-  background: #666;
-  position: relative;
-  border-bottom-left-radius: 40px;
-  border-bottom-right-radius: 40px;
-}
-
-.back-btn {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-
-  background: none;
-  border: none;
-
-  color: white;
-  font-size: 28px;
+button {
   cursor: pointer;
+  border: none;
+  transition: 0.2s ease;
 }
 
-.profile-picture {
-  position: absolute;
-
-  bottom: -60px;
-  left: 50%;
-
-  transform: translateX(-50%);
+button:hover {
+  opacity: 0.9;
 }
 
-.profile-picture img {
-  width: 140px;
-  height: 140px;
+/* =========================
+   ADMIN CONTROLS
+========================= */
 
-  border-radius: 50%;
-  border: 6px solid white;
-
-  object-fit: cover;
-}
-
-/* Info */
-
-.profile-info {
-  padding: 90px 25px 40px;
-}
-
-.profile-info h1 {
-  font-size: 3rem;
-  color: #004f52;
-  margin-bottom: 25px;
-}
-
-/* Stats */
-
-.stats-container {
-  position: absolute;
-  right: 20px;
-  top: 180px;
-
+.admin-controls {
   display: flex;
+  justify-content: flex-end;
+  margin-bottom: 2rem;
 }
 
-.stat {
-  width: 90px;
-  height: 90px;
+.admin-login-btn,
+.admin-logout-btn {
+  background: #006d77;
+  color: white;
+  padding: 0.8rem 1.2rem;
+  border-radius: 8px;
+  font-weight: 600;
+}
 
+/* =========================
+   PROFILE HEADER
+========================= */
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.profile-image-container {
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
+  gap: 1rem;
+}
 
+.profile-image {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  object-fit: cover;
+
+  border: 5px solid #006d77;
+
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.change-image-btn {
+  background: #006d77;
   color: white;
+  padding: 0.7rem 1rem;
+  border-radius: 8px;
+}
+
+.profile-name-section {
+  flex: 1;
+}
+
+.profile-name-section h1 {
+  font-size: 3rem;
+  color: #004e57;
+  margin-bottom: 1rem;
+}
+
+.edit-name-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.edit-name-container input {
+  padding: 0.75rem;
+  min-width: 300px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+/* =========================
+   STATS
+========================= */
+
+.profile-stats {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 3rem;
+}
+
+.stat-card {
+  min-width: 150px;
+  padding: 1rem;
+
+  border-radius: 12px;
+
+  text-align: center;
+
+  box-shadow:
+    0 3px 10px rgba(0,0,0,0.08);
+}
+
+.stat-card h2 {
+  font-size: 2rem;
+}
+
+.stat-card p {
+  margin-top: 0.5rem;
 }
 
 .verified {
-  background: #0f9ea4;
-  border-top-left-radius: 30px;
+  background: #0ea5a8;
+  color: white;
 }
 
 .connections {
-  background: #d8d59c;
-  color: #004f52;
-  border-top-right-radius: 30px;
+  background: #e6e3a8;
+  color: #004e57;
 }
 
-.stat h2 {
-  font-size: 1.7rem;
+/* =========================
+   ABOUT ME
+========================= */
+
+.about-section {
+  background: white;
+
+  padding: 1.5rem;
+
+  border-radius: 12px;
+
+  margin-bottom: 3rem;
+
+  box-shadow:
+    0 3px 10px rgba(0,0,0,0.08);
 }
 
-.stat p {
-  font-size: 0.8rem;
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  margin-bottom: 1rem;
 }
 
-/* About */
-
-.about-section h2 {
-  color: #004f52;
-  margin-bottom: 10px;
+.section-header h2 {
+  color: #004e57;
 }
 
-.about-section p {
-  margin-bottom: 15px;
-  color: #333;
+.about-text {
+  line-height: 1.7;
 }
 
-.about-section button {
-  background: #004f52;
-  color: white;
+.about-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
 
-  border: none;
-  padding: 10px 18px;
+.about-editor textarea {
+  min-height: 150px;
+
+  padding: 1rem;
+
+  resize: vertical;
 
   border-radius: 8px;
-  cursor: pointer;
+  border: 1px solid #ccc;
 }
 
-/* Posts */
+.character-counter {
+  text-align: right;
+  color: gray;
+  font-size: 0.9rem;
+}
+
+/* =========================
+   BUTTONS
+========================= */
+
+.edit-btn,
+.save-btn,
+.cancel-btn,
+.verify-btn,
+.delete-btn {
+  padding: 0.7rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.edit-btn {
+  background: #006d77;
+  color: white;
+}
+
+.save-btn {
+  background: #2a9d8f;
+  color: white;
+}
+
+.cancel-btn {
+  background: #d9d9d9;
+}
+
+.delete-btn {
+  background: #d62828;
+  color: white;
+}
+
+.verify-btn {
+  background: #ffb703;
+}
+
+/* =========================
+   POSTS SECTION
+========================= */
 
 .posts-section {
-  margin-top: 35px;
+  margin-bottom: 3rem;
 }
 
-.posts-section h2 {
-  color: #004f52;
-  margin-bottom: 20px;
+.posts-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  margin-bottom: 1.5rem;
 }
+
+.posts-header h2 {
+  color: #004e57;
+}
+
+.create-post-btn {
+  background: #006d77;
+  color: white;
+
+  padding: 0.8rem 1.2rem;
+
+  border-radius: 8px;
+}
+
+/* =========================
+   POSTS GRID
+========================= */
 
 .posts-grid {
   display: grid;
 
   grid-template-columns:
-    repeat(auto-fill, minmax(180px, 1fr));
+    repeat(auto-fill, minmax(280px, 1fr));
 
-  gap: 20px;
+  gap: 1.5rem;
 }
 
 .post-card {
-  height: 200px;
-
-  border: 2px solid #d4d4d4;
-  border-radius: 10px;
-
   background: white;
 
-  position: relative;
+  border-radius: 12px;
+
+  overflow: hidden;
+
+  box-shadow:
+    0 3px 10px rgba(0,0,0,0.08);
 }
 
-.post-actions {
+.post-image-container {
+  position: relative;
+  cursor: pointer;
+}
+
+.post-image {
+  width: 100%;
+  height: 280px;
+
+  object-fit: cover;
+}
+
+.post-verified-badge {
   position: absolute;
 
-  top: 5px;
-  right: 5px;
+  top: 10px;
+  right: 10px;
 
-  display: flex;
-  gap: 5px;
+  background: #2a9d8f;
+  color: white;
+
+  padding: 0.4rem 0.8rem;
+
+  border-radius: 999px;
+
+  font-size: 0.85rem;
 }
 
-.post-actions button {
-  border: none;
-  background: #ddd;
+.post-info {
+  padding: 1rem;
+}
 
-  width: 30px;
-  height: 30px;
+.post-info h3 {
+  margin-bottom: 0.5rem;
+}
 
-  border-radius: 5px;
-  cursor: pointer;
+.post-info p {
+  color: #555;
+}
+
+.post-admin-controls {
+  display: flex;
+  gap: 0.5rem;
+
+  padding: 1rem;
+  flex-wrap: wrap;
+}
+
+/* =========================
+   EMPTY POSTS
+========================= */
+
+.empty-posts {
+  background: white;
+  padding: 3rem;
+
+  text-align: center;
+
+  border-radius: 12px;
+}
+
+/* =========================
+   MODAL
+========================= */
+
+.modal-overlay {
+  position: fixed;
+
+  top: 0;
+  left: 0;
+
+  width: 100%;
+  height: 100%;
+
+  background: rgba(0,0,0,0.6);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  z-index: 1000;
+}
+
+.post-modal {
+  background: white;
+
+  width: 90%;
+  max-width: 1000px;
+
+  max-height: 90vh;
+
+  overflow-y: auto;
+
+  border-radius: 15px;
+
+  position: relative;
+
+  padding: 2rem;
+}
+
+.close-modal-btn {
+  position: absolute;
+
+  top: 15px;
+  right: 15px;
+
+  background: transparent;
+
+  font-size: 2rem;
+}
+
+.modal-image-container {
+  margin-bottom: 1.5rem;
+}
+
+.modal-image {
+  width: 100%;
+  max-height: 500px;
+
+  object-fit: cover;
+
+  border-radius: 12px;
+}
+
+.image-placeholder {
+  height: 300px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #f2f2f2;
+
+  border-radius: 12px;
+}
+
+.modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.modal-content input,
+.modal-content textarea {
+  padding: 1rem;
+
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.modal-content textarea {
+  min-height: 150px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.verified-badge {
+  display: inline-block;
+
+  margin-top: 1rem;
+
+  background: #2a9d8f;
+  color: white;
+
+  padding: 0.5rem 1rem;
+
+  border-radius: 999px;
+}
+
+/* =========================
+   ADMIN LOGIN MODAL
+========================= */
+
+.admin-modal {
+  background: white;
+
+  width: 400px;
+
+  padding: 2rem;
+
+  border-radius: 12px;
+}
+
+.admin-modal h2 {
+  margin-bottom: 1rem;
+}
+
+.admin-modal input {
+  width: 100%;
+
+  padding: 1rem;
+
+  margin-bottom: 1rem;
+
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+.error-message {
+  color: red;
+  margin-bottom: 1rem;
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 768px) {
+  .profile-header {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .profile-stats {
+    flex-direction: column;
+  }
+
+  .posts-header {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .modal-buttons {
+    flex-direction: column;
+  }
 }

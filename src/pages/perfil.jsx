@@ -1,73 +1,96 @@
-import "../assets/styles/perfil/perfil.css";
+import { useState, useRef, useEffect} from "react";
 
-function App() {
-  const posts = Array(6).fill(null);
+import pfStats from "..perfil-components/perfil-stats";
+import Abtme from "..perfil-components/abtme";
+import PostsGrid from "../components/PostsGrid";
+import AdminLogin from "../components/AdminLogin";
+
+const Perfil = () => {
+  /*
+    Temporary data.
+    Later this will come from Supabase.
+  */
+
+  const [perfil, setPerfil, setPf] = useState({
+    name: "Alan Brito",
+    aboutMe:
+      "Welcome to my profile. Here you'll find projects, achievements, and verified posts.",
+    profileImage:
+      "https://placehold.co/250x250/png",
+  });
+
+  const [posts, setPosts] = useState([
+    {
+      id: 1,
+      title: "My First Post",
+      description: "Example description",
+      image_url: "https://placehold.co/600x600/png",
+      verified: true,
+    },
+    {
+      id: 2,
+      title: "Another Post",
+      description: "Another example description",
+      image_url: "https://placehold.co/600x600/png",
+      verified: false,
+    },
+  ]);
+
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  const verifiedCount = posts.filter(
+    (post) => post.verified
+  ).length;
+
+  const totalPosts = posts.length;
 
   return (
-    <div className="profile-page">
+    <main className="perfil-page">
 
-      {/* Header */}
-      <header className="banner">
-        <button className="back-btn">&lt;</button>
+      {/* Admin Login */}
+      <AdminLogin
+        isAdmin={isAdmin}
+        setIsAdmin={setIsAdmin}
+      />
 
-        <div className="profile-picture">
-          <img
-            src="https://placehold.co/150x150"
-            alt="Profile"
-          />
-        </div>
-      </header>
+      {/* info del perfil */}
+      <perfil-stats
+        perfil={perfil}
+        setPerfil={setPerfil}
+        isAdmin={isAdmin}
+      />
 
-      {/* Profile Info */}
-      <section className="profile-info">
+      {/* stats */}
+      <section className="stats">
 
-        <div className="stats-container">
-          <div className="stat verified">
-            <h2>10</h2>
-            <p>Verified</p>
-          </div>
-
-          <div className="stat connections">
-            <h2>10</h2>
-            <p>Connections</p>
-          </div>
+        <div className="stat-card verified">
+          <h2>{verifiedCount}</h2>
+          <p>Verified</p>
         </div>
 
-        <h1>Alan Brito</h1>
-
-        <section className="about-section">
-          <h2>About Me</h2>
-
-          <p>
-            Lorem ipsum dolor sit amet consectetur adipisicing elit.
-          </p>
-
-          <button>Edit About Me</button>
-        </section>
-
-        <section className="posts-section">
-          <h2>Posts</h2>
-
-          <div className="posts-grid">
-            {posts.map((_, index) => (
-              <div key={index} className="post-card">
-
-                <div className="post-actions">
-                  <button>✓</button>
-                  <button>✎</button>
-                  <button>🗑</button>
-                </div>
-
-              </div>
-            ))}
-          </div>
-
-        </section>
+        <div className="stat-card connections">
+          <h2>{totalPosts}</h2>
+          <p>Connections</p>
+        </div>
 
       </section>
 
-    </div>
-  );
-}
+      {/* About Me */}
+      <AboutMe
+        perfil={perfil}
+        setPerfil={setPerfil}
+        isAdmin={isAdmin}
+      />
 
-export default App;
+      {/* Posts */}
+      <PostsGrid
+        posts={posts}
+        setPosts={setPosts}
+        isAdmin={isAdmin}
+      />
+
+    </main>
+  );
+};
+
+export default Perfil;
