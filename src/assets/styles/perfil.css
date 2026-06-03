@@ -155,3 +155,27 @@ p {
   grid-template-columns: repeat(1, 1fr);
 }
 }
+
+.post-archive {
+  position: sticky;
+  width: 48px;
+  bottom: 5px;
+  aspect-ratio: 1/1;
+  justify-content: center;
+  align-content: center;
+  background-color: #9acd95;
+  margin-left: auto;
+
+  padding: 2px 6px;
+  border-radius: 5px;
+  padding: 7px;
+  font-size: 12px;
+}
+.post-archive:hover {
+  background-color: #7a9c6d;
+  cursor: pointer;
+  
+}
+.post-archive:active {
+  background-color: #9bcd80;
+}

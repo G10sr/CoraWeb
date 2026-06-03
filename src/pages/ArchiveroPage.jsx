@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import "../assets/styles/ArchiveroPage.css";
@@ -13,9 +14,12 @@ import "../assets/styles/AgenteCora.css";
 const imagePool = [basura1, basura2, basura3];
 const allowedRegions = ["Colegio CTP CIT", "Soda armonia"];
 
-const defaultDescription = (name, region) =>
-  `${name} es un punto de recoleccion en ${region}. Reporte verificado por la comunidad Cora.`;
-
+const defaultDescription = (name, region, verified) =>
+  `${name} es un punto de recoleccion en ${region}. ${
+    verified
+      ? "Este punto ha sido verificado por la comunidad."
+      : "Este punto no ha sido verificado por la comunidad."
+  }`;
 const hashStringToIndex = (value, modulo) => {
   const text = String(value || "");
   let hash = 0;
@@ -201,6 +205,10 @@ function PointDetailModal({ point, onClose }) {
 }
 
 function ArchiveroPage() {
+  const location = useLocation();
+
+  const targetPointId = location.state?.pointId;
+
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRegion, setSelectedRegion] = useState("all");
   const [selectedPoint, setSelectedPoint] = useState(null);
@@ -209,6 +217,18 @@ function ArchiveroPage() {
     Object.fromEntries(carouselSections.map((sectionTitle) => [sectionTitle, 0])),
   );
   const [firebasePoints, setFirebasePoints] = useState([]);
+
+  useEffect(() => {
+    if (!targetPointId || firebasePoints.length === 0) return;
+
+    const point = firebasePoints.find(
+      (p) => p.id === targetPointId
+    );
+
+    if (point) {
+      setSelectedPoint(point);
+    }
+  }, [targetPointId, firebasePoints]);
 
   useEffect(() => {
     const reportesRef = collection(db, "reportes");
@@ -227,6 +247,7 @@ function ArchiveroPage() {
             region,
             image: imagePool[hashStringToIndex(docSnap.id, imagePool.length)],
             wasteType: data.tipo_residuo,
+            verified: data.verified || false,
             amount: data.cantidad,
             slope: data.pendiente,
             waterProximity: data.cercania_agua,
@@ -235,7 +256,7 @@ function ArchiveroPage() {
             position: data.latitud && data.longitud ? [data.latitud, data.longitud] : null,
             createdAt: data.fecha_creacion?.seconds ? data.fecha_creacion.seconds * 1000 : null,
           };
-          point.description = defaultDescription(point.name, region);
+          point.description = defaultDescription(point.name, region, point.verified);
           point.analysis = analyzeReport(point);
           puntos.push(point);
         });

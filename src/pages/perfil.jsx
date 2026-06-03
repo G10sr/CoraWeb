@@ -9,6 +9,7 @@ import { db } from "../firebase/firebaseConfig";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { useNavigate } from "react-router-dom";
+import ArchiveIcon from "../assets/img/box-archive-solid-full.svg";
 
 function MiniMap({ position }) {
   const navigate = useNavigate();
@@ -51,6 +52,8 @@ function MiniMap({ position }) {
 }
 
 function Profile() {
+  const navigate = useNavigate();
+
   let verifiedPosts = 0;
 
 
@@ -169,7 +172,7 @@ function Profile() {
         <h1 className="nature-title">{perfil ? perfil.nombre : "Cargando..."}</h1>
 
         <section>
-          <h2>Sobre Mí</h2>
+          <h2 className="nature-title">Sobre Mí</h2>
           <p>{perfil ? perfil.descripcion : "Cargando..."}</p>
         </section>
 
@@ -188,6 +191,10 @@ function Profile() {
                   <p><strong>Región:</strong> {post.region}</p>
                   <p><strong>Tipo de Residuo:</strong> {post.wasteType}</p>
                   <p><strong>Cantidad:</strong> {post.amount}</p>
+                  <p><strong>Pendiente:</strong> {post.slope}</p>
+                  <p><strong>Cercanía al Agua:</strong> {post.waterProximity}</p>
+                  <p><strong>Nivel de Riesgo:</strong> {post.riskLevel}</p>
+                  <p><strong>Tipo de Material:</strong> {post.materialType}</p>
                   <p><strong>Reportado por:</strong> {post.name}</p>
                   <p><strong>Fecha:</strong> {post.timestamp}</p>
                 </div>
@@ -195,7 +202,22 @@ function Profile() {
                   <span>✎</span>
                   <span>🗑</span>
                 </div>
-              </div>
+                <div
+                  className="post-archive"
+                  onClick={() =>
+                    navigate("/archivero", {
+                      state: {
+                        pointId: post.id,
+                      },
+                    })
+                  }
+                >
+                  <img
+                    style={{ width: "inherit", filter: "invert(0.02)" }}
+                    src={ArchiveIcon}
+                    alt="Archivar"
+                  />
+                </div>              </div>
             ))}
           </div>
         </section>

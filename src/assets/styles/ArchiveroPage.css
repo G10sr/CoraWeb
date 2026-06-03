@@ -261,6 +261,7 @@
     0 24px 60px rgba(4, 80, 79, 0.28),
     0 0 0 1px rgba(255, 255, 255, 0.5) inset;
   animation: archivero-slide-up 0.3s ease;
+  z-index: 2001;
 }
 
 .archivero-modal-close {
