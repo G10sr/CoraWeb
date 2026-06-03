@@ -1,5 +1,5 @@
 import React from "react";
-import "../assets/styles/perfil.css";
+import "../assets/styles/Perfil.css";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useEffect, useState } from "react";
