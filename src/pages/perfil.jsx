@@ -1,23 +1,75 @@
-import { useState, useRef, useEffect} from "react";
+/*
+====================================================
+PERFIL PAGE
+====================================================
 
+Esta página representa el perfil principal del usuario.
+
+Su responsabilidad es:
+
+1. Mantener el estado global del perfil.
+2. Mantener el estado de las publicaciones.
+3. Controlar si el usuario tiene permisos de administrador.
+4. Pasar la información necesaria a los componentes hijos.
+
+Actualmente utiliza datos temporales (mock data),
+pero en futuras versiones estos datos serán obtenidos
+desde Supabase.
+*/
+
+import { useState, useRef, useEffect } from "react";
+
+// Componentes de la página de perfil
 import pfStats from "..perfil-components/perfil-stats";
 import Abtme from "..perfil-components/abtme";
 import PostsGrid from "../components/PostsGrid";
 import AdminLogin from "../components/AdminLogin";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 
 const Perfil = () => {
+
   /*
-    Temporary data.
-    Later this will come from Supabase.
+  ====================================================
+  PERFIL STATE
+  ====================================================
+
+  Almacena toda la información básica del usuario.
+
+  Se utiliza un único objeto para mantener relacionados
+  todos los datos del perfil y facilitar futuras
+  actualizaciones desde una base de datos.
   */
 
   const [perfil, setPerfil, setPf] = useState({
     name: "Alan Brito",
+
     aboutMe:
       "Welcome to my profile. Here you'll find projects, achievements, and verified posts.",
+
     profileImage:
       "https://placehold.co/250x250/png",
   });
+
+  /*
+  ====================================================
+  POSTS STATE
+  ====================================================
+
+  Guarda todas las publicaciones asociadas al perfil.
+
+  Cada publicación contiene:
+
+  - id: identificador único
+  - title: título
+  - description: descripción
+  - image_url: imagen asociada
+  - verified: indica si fue aprobada por un administrador
+
+  El estado se mantiene en el componente padre para que
+  todos los componentes hijos trabajen sobre la misma
+  fuente de datos.
+  */
 
   const [posts, setPosts] = useState([
     {
@@ -36,31 +88,85 @@ const Perfil = () => {
     },
   ]);
 
+  /*
+  ====================================================
+  ADMIN STATE
+  ====================================================
+
+  Determina si el usuario actual tiene permisos
+  administrativos.
+
+  Cuando es true:
+  - Puede editar información del perfil.
+  - Puede gestionar publicaciones.
+  - Puede acceder a herramientas administrativas.
+
+  Cuando es false:
+  - Solo puede visualizar contenido.
+  */
+
   const [isAdmin, setIsAdmin] = useState(false);
 
+  /*
+  ====================================================
+  ESTADÍSTICAS DERIVADAS
+  ====================================================
+
+  Estos valores NO se almacenan en un estado porque
+  pueden calcularse directamente a partir de los posts.
+
+  Esto evita duplicación de información y mantiene
+  una única fuente de verdad.
+  */
+
+  // Cantidad de publicaciones verificadas
   const verifiedCount = posts.filter(
     (post) => post.verified
   ).length;
 
+  // Cantidad total de publicaciones
   const totalPosts = posts.length;
 
   return (
     <main className="perfil-page">
 
-      {/* Admin Login */}
+      {/* ------------------------------------------------
+          LOGIN DE ADMINISTRADOR
+          ------------------------------------------------
+
+          Permite activar o desactivar el modo admin.
+
+          Recibe:
+          - isAdmin: estado actual
+          - setIsAdmin: función para actualizarlo
+      */}
       <AdminLogin
         isAdmin={isAdmin}
         setIsAdmin={setIsAdmin}
       />
 
-      {/* info del perfil */}
+      {/* ------------------------------------------------
+          INFORMACIÓN DEL PERFIL
+          ------------------------------------------------
+
+          Muestra nombre, imagen y demás información
+          principal del usuario.
+
+          Si isAdmin es true, permite edición.
+      */}
       <perfil-stats
         perfil={perfil}
         setPerfil={setPerfil}
         isAdmin={isAdmin}
       />
 
-      {/* stats */}
+      {/* ------------------------------------------------
+          ESTADÍSTICAS
+          ------------------------------------------------
+
+          Muestra información calculada automáticamente
+          a partir de las publicaciones.
+      */}
       <section className="stats">
 
         <div className="stat-card verified">
@@ -75,14 +181,35 @@ const Perfil = () => {
 
       </section>
 
-      {/* About Me */}
+      {/* ------------------------------------------------
+          ABOUT ME
+          ------------------------------------------------
+
+          Muestra la descripción personal del usuario.
+
+          Si el administrador está autenticado,
+          puede modificar el contenido.
+      */}
       <AboutMe
         perfil={perfil}
         setPerfil={setPerfil}
         isAdmin={isAdmin}
       />
 
-      {/* Posts */}
+      {/* ------------------------------------------------
+          POSTS GRID
+          ------------------------------------------------
+
+          Muestra todas las publicaciones del perfil.
+
+          Recibe acceso completo al estado de posts
+          para permitir:
+
+          - Crear publicaciones
+          - Editar publicaciones
+          - Eliminar publicaciones
+          - Verificar publicaciones
+      */}
       <PostsGrid
         posts={posts}
         setPosts={setPosts}
