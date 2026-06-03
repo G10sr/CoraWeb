@@ -20,10 +20,10 @@ desde Supabase.
 import { useState, useRef, useEffect } from "react";
 
 // Componentes de la página de perfil
-import pfStats from "..perfil-components/perfil-stats";
-import Abtme from "..perfil-components/abtme";
-import PostsGrid from "../components/PostsGrid";
-import AdminLogin from "../components/AdminLogin";
+import pfStats from "../components/perfil-components/perfil-stats";
+import Abtme from "../components/perfil-components/abtme";
+import PostsGrid from "../components/perfil-components/postsGrid";
+import AdminLogin from "../components/perfil-components/adminLogin";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 
