@@ -28,8 +28,8 @@ lógica relacionada con los posts.
 
 import { useState } from "react";
 
-import PostCard from "./PostCard";
-import PostModal from "./PostModal";
+import PostCard from "./postcard";
+import PostModal from "./postModal";
 
 const PostsGrid = ({
   posts,
