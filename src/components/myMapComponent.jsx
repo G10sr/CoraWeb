@@ -66,6 +66,7 @@ function RecenterMap({ position }) {
 
 // --- COMPONENTE PRINCIPAL ---
 function MyMapComponent() {
+    const USER_ID = "edd33b43-0cb5-477a-b574-8ae8949cd5bf";
     const location = useLocation();
     const focusPoint = location.state?.focus;
     const [userPosition, setUserPosition] = useState(null);
@@ -86,7 +87,7 @@ function MyMapComponent() {
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify({
-                        id: "edd33b43-0cb5-477a-b574-8ae8949cd5bf",
+                        id: USER_ID,
                     }),
                 }
             );
@@ -208,7 +209,10 @@ function MyMapComponent() {
 
         try {
             const reportesRef = collection(db, "reportes");
-            await addDoc(reportesRef, {
+
+
+            const docRef = await addDoc(reportesRef, {
+                usuario_id: USER_ID,
                 reportado_por: formData.name,
                 region: formData.region,
                 tipo_residuo: formData.wasteType,
@@ -222,7 +226,30 @@ function MyMapComponent() {
                 fecha_creacion: serverTimestamp()
             });
 
-            alert("¡Reporte guardado exitosamente en Firebase!");
+            const response = await fetch(
+                "http://localhost:3000/api/agregar-punto",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        id: USER_ID,
+                        puntoId: docRef.id
+                    }),
+                }
+            );
+
+            const data = await response.json();
+
+            if (!data.ok) {
+                throw new Error(data.message);
+            }
+
+            // 3. Actualizar perfil local
+            setPerfil(data.perfil);
+
+            alert("Punto registrado correctamente");
             setTempMarker(null);
 
         } catch (error) {
