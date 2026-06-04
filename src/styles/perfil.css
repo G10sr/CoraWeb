@@ -19,9 +19,11 @@
 
 .profile-page {
   width: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 2rem;
+  min-height: 100vh;
+
+  background: #ecece4;
+
+  padding: 1.5rem;
 }
 
 button {
@@ -59,11 +61,42 @@ button:hover {
 
 .profile-header {
   display: flex;
-  align-items: center;
-  gap: 2rem;
-  margin-bottom: 3rem;
+  align-items: flex-end;
+  gap: 1.5rem;
+
+  margin-bottom: 1.5rem;
 }
 
+.profile-image-container {
+  position: relative;
+}
+
+.profile-image {
+  width: 170px;
+  height: 170px;
+
+  border-radius: 50%;
+  object-fit: cover;
+
+  border: 6px solid #f5f5f0;
+
+  box-shadow: none;
+}
+
+.profile-name-section {
+  flex: 1;
+}
+
+.profile-name-section h1 {
+  font-size: 3.5rem;
+  font-weight: 800;
+
+  color: #00575b;
+
+  text-decoration: none;
+
+  margin: 0;
+}
 .profile-image-container {
   display: flex;
   flex-direction: column;
@@ -118,38 +151,46 @@ button:hover {
 
 .profile-stats {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 3rem;
+  gap: 0;
+
+  margin-bottom: 2rem;
 }
 
 .stat-card {
-  min-width: 150px;
-  padding: 1rem;
+  width: 95px;
+  height: 95px;
 
-  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 
-  text-align: center;
+  border-radius: 25px 25px 0 0;
 
-  box-shadow:
-    0 3px 10px rgba(0,0,0,0.08);
+  box-shadow: none;
+
+  padding: 0;
 }
 
 .stat-card h2 {
   font-size: 2rem;
+  margin: 0;
 }
 
 .stat-card p {
-  margin-top: 0.5rem;
+  font-size: 0.7rem;
+  margin: 0;
+  text-align: center;
 }
 
 .verified {
-  background: #0ea5a8;
+  background: #00a4a8;
   color: white;
 }
 
 .connections {
-  background: #e6e3a8;
-  color: #004e57;
+  background: #d8d59b;
+  color: #00575b;
 }
 
 /* =========================
@@ -157,16 +198,13 @@ button:hover {
 ========================= */
 
 .about-section {
-  background: white;
+  background: transparent;
 
-  padding: 1.5rem;
+  padding: 0;
 
-  border-radius: 12px;
+  margin-bottom: 2rem;
 
-  margin-bottom: 3rem;
-
-  box-shadow:
-    0 3px 10px rgba(0,0,0,0.08);
+  box-shadow: none;
 }
 
 .section-header {
@@ -178,11 +216,20 @@ button:hover {
 }
 
 .section-header h2 {
-  color: #004e57;
+  color: #00575b;
+
+  font-size: 2.3rem;
+  font-weight: 700;
 }
 
 .about-text {
-  line-height: 1.7;
+  color: #00575b;
+
+  font-size: 1rem;
+
+  text-decoration: none;
+
+  max-width: 700px;
 }
 
 .about-editor {
@@ -227,7 +274,19 @@ button:hover {
   border-radius: 8px;
   font-weight: 600;
 }
+.edit-btn,
+.save-btn,
+.cancel-btn,
+.verify-btn,
+.delete-btn,
+.create-post-btn,
+.change-image-btn,
+.admin-login-btn,
+.admin-logout-btn {
+  border-radius: 6px;
 
+  box-shadow: none;
+}
 .edit-btn {
   background: #006d77;
   color: white;
@@ -268,7 +327,10 @@ button:hover {
 }
 
 .posts-header h2 {
-  color: #004e57;
+  color: #00575b;
+
+  font-size: 2.3rem;
+  font-weight: 700;
 }
 
 .create-post-btn {
@@ -288,20 +350,21 @@ button:hover {
   display: grid;
 
   grid-template-columns:
-    repeat(auto-fill, minmax(280px, 1fr));
+    repeat(auto-fill, minmax(180px, 1fr));
 
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
 .post-card {
-  background: white;
+  background: transparent;
 
-  border-radius: 12px;
+  border: 2px solid #b9d1cf;
+
+  border-radius: 10px;
 
   overflow: hidden;
 
-  box-shadow:
-    0 3px 10px rgba(0,0,0,0.08);
+  box-shadow: none;
 }
 
 .post-image-container {
@@ -311,11 +374,10 @@ button:hover {
 
 .post-image {
   width: 100%;
-  height: 280px;
+  aspect-ratio: 1 / 1;
 
   object-fit: cover;
 }
-
 .post-verified-badge {
   position: absolute;
 
@@ -333,23 +395,28 @@ button:hover {
 }
 
 .post-info {
-  padding: 1rem;
+  padding: 0.6rem;
 }
 
 .post-info h3 {
-  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: #00575b;
 }
 
 .post-info p {
+  font-size: 0.8rem;
   color: #555;
 }
 
 .post-admin-controls {
   display: flex;
-  gap: 0.5rem;
+  justify-content: center;
 
-  padding: 1rem;
-  flex-wrap: wrap;
+  gap: 0.4rem;
+
+  padding: 0.4rem;
+
+  background: #dcdcdc;
 }
 
 /* =========================

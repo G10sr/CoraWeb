@@ -173,14 +173,14 @@ const Perfil = () => {
       */}
       <section className="profile-stats">
 
-        <div className="stat-card verified">
+        <div className="stat-card connections">
           <h2>{verifiedCount}</h2>
-          <p>Verified</p>
+          <p>Verificados</p>
         </div>
 
-        <div className="stat-card connections">
+        <div className="stat-card verified">
           <h2>{totalPosts}</h2>
-          <p>Connections</p>
+          <p>Posts</p>
         </div>
 
       </section>
