@@ -122,7 +122,7 @@ function Profile() {
 
       console.log("Perfil cargado:", data);
 
-      setPerfil(data.perfil); // 👈 AQUÍ está la clave
+      setPerfil(data.perfil);
 
     } catch (error) {
       console.error(error);
