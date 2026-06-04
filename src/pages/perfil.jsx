@@ -4,7 +4,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useEffect, useState } from "react";
 import usr_img from "../assets/img/usr_unk.jpeg";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, deleteDoc, updateDoc } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -49,6 +49,7 @@ function MiniMap({ position }) {
 }
 
 function Profile() {
+  const USER_ID = "edd33b43-0cb5-477a-b574-8ae8949cd5bf";
   const navigate = useNavigate();
 
   let verifiedPosts = 0;
@@ -68,7 +69,40 @@ function Profile() {
       .then((data) => setBannerImage(data.image));
   }, []);
 
+  const eliminarPost = async (postId) => {
+    const confirmar = window.confirm(
+      "¿Deseas eliminar este reporte?"
+    );
 
+    if (!confirmar) return;
+
+    try {
+      // Eliminar de Firebase
+      await deleteDoc(doc(db, "reportes", postId));
+
+      // Eliminar referencia del perfil
+      await fetch("http://localhost:3000/api/eliminar-punto", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: USER_ID,
+          puntoId: postId,
+        }),
+      });
+
+      // Actualizar la UI
+      setPosts((prev) =>
+        prev.filter((post) => post.id !== postId)
+      );
+
+      alert("Reporte eliminado correctamente");
+    } catch (error) {
+      console.error(error);
+      alert("Error al eliminar el reporte");
+    }
+  };
   async function cargarPerfil() {
     try {
       const response = await fetch(
@@ -79,7 +113,7 @@ function Profile() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            id: "edd33b43-0cb5-477a-b574-8ae8949cd5bf",
+            id: USER_ID,
           }),
         }
       );
@@ -177,54 +211,77 @@ function Profile() {
         <h1 className="nature-title">{perfil ? perfil.nombre : "Cargando..."}</h1>
 
         <section>
-          <h2 className="nature-title">Sobre Mí</h2>
+          <h2 className="aboutme">Sobre Mí</h2>
           <p>{perfil ? perfil.descripcion : "Cargando..."}</p>
         </section>
 
         <section>
           <h2 className="nature-title">Publicados</h2>
           <div className="posts-grid">
-            {posts.map((post, index) => (
-              <div className="post-card" key={index}>
-                <div className={`verification-status ${post.verified ? 'verified' : 'unverified'}`}>
-                  {post.verified ? 'Verificado' : 'No verificado'}
-                </div>
-                <div className="mini-map-wrapper">
-                  <MiniMap position={post.position} />
-                </div>
-                <div className="post-info">
-                  <p><strong>Región:</strong> {post.region}</p>
-                  <p><strong>Tipo de Residuo:</strong> {post.wasteType}</p>
-                  <p><strong>Cantidad:</strong> {post.amount}</p>
-                  <p><strong>Pendiente:</strong> {post.slope}</p>
-                  <p><strong>Cercanía al Agua:</strong> {post.waterProximity}</p>
-                  <p><strong>Nivel de Riesgo:</strong> {post.riskLevel}</p>
-                  <p><strong>Tipo de Material:</strong> {post.materialType}</p>
-                  <p><strong>Reportado por:</strong> {post.name}</p>
-                  <p><strong>Fecha:</strong> {post.timestamp}</p>
-                </div>
-                <div className="post-actions">
-                  <span>✎</span>
-                  <span>🗑</span>
-                </div>
-                <div
-                  className="post-archive"
-                  onClick={() =>
-                    navigate("/archivero", {
-                      state: {
-                        pointId: post.id,
-                      },
-                    })
-                  }
-                >
-                  <img
-                    className="archive-icon"
-                    src={ArchiveIcon}
-                    alt="Archivar"
-                  />
-                </div>
+            {perfil && posts.length === 0 ? (
+              <div className="no-posts-message">
+                Tu cuenta no tiene posts asociados.
               </div>
-            ))}
+            ) : (
+              posts.map((post, index) => (
+                <div className="post-card" key={index}>
+                  <div className={`verification-status ${post.verified ? 'verified' : 'unverified'}`}>
+                    {post.verified ? 'Verificado' : 'No verificado'}
+                  </div>
+
+                  <div className="mini-map-wrapper">
+                    <MiniMap position={post.position} />
+                  </div>
+
+                  <div className="post-info">
+                    <h3 className="post-title">
+                      Reporte de {post.wasteType} en {post.region}
+                    </h3>
+
+                    <p className="post-description">
+                      Se detectó una acumulación de <strong>{post.amount}</strong> de residuos
+                      clasificados como <strong>{post.materialType}</strong>. El área presenta una
+                      pendiente <strong>{post.slope}</strong> y una cercanía al agua de nivel{" "}
+                      <strong>{post.waterProximity}</strong>, lo que genera un riesgo de
+                      contaminación <strong>{post.riskLevel}</strong>.
+                    </p>
+
+                    <div className="post-footer">
+                      <span>👤 {post.name}</span>
+                      <span>📅 {post.timestamp}</span>
+                    </div>
+                  </div>
+
+                  <div className="post-actions">
+                    <span>✎</span>
+
+                    <span
+                      style={{ cursor: "pointer" }}
+                      onClick={() => eliminarPost(post.id)}
+                    >
+                      🗑
+                    </span>
+                  </div>
+
+                  <div
+                    className="post-archive"
+                    onClick={() =>
+                      navigate("/archivero", {
+                        state: {
+                          pointId: post.id,
+                        },
+                      })
+                    }
+                  >
+                    <img
+                      className="archive-icon"
+                      src={ArchiveIcon}
+                      alt="Archivar"
+                    />
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </section>
       </div>
