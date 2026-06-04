@@ -32,7 +32,7 @@ export default function Login() {
     const password = formData.password;
 
     if (username === VALID_USER && password === VALID_PASSWORD) {
-      setAuthenticated(true);
+      setAuthenticated(true, username);
       navigate("/");
     } else {
       setError("Credenciales incorrectas. Intentalo de nuevo.");
