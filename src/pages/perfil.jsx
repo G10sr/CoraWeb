@@ -205,7 +205,6 @@ function Profile() {
             <span>Verificados</span>
           </div>
         </div>
-      </div>
 
       <div className="content">
         <h1 className="nature-title">{perfil ? perfil.nombre : "Cargando..."}</h1>
@@ -290,4 +289,4 @@ function Profile() {
   );
 };
 
-export default Profile;
+export default Perfil;
