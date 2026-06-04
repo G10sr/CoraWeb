@@ -9,7 +9,10 @@ import { db } from "../firebase/firebaseConfig";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { useNavigate } from "react-router-dom";
-import ArchiveIcon from "../assets/img/box-archive-solid-full.svg";
+import ArchiveIcon from "../assets/img/icons/box-archive-solid-full.svg";
+
+
+
 
 function MiniMap({ position }) {
   const navigate = useNavigate();
@@ -53,10 +56,18 @@ function Profile() {
 
   const [posts, setPosts] = useState([]);
   const [perfil, setPerfil] = useState(null);
+  const [BannerImage, setBannerImage] = useState("");
 
   useEffect(() => {
     cargarPerfil();
   }, []);
+
+  useEffect(() => {
+    fetch("http://localhost:3000/api/nature-image")
+      .then((r) => r.json())
+      .then((data) => setBannerImage(data.image));
+  }, []);
+
 
   async function cargarPerfil() {
     try {
@@ -142,7 +153,7 @@ function Profile() {
   console.log("Posts verificados:", verifiedPosts);
   return (
     <div className="profile-container page-transition">
-      <div className="header">
+      <div className="header" style={{ backgroundImage: `url(${BannerImage})` }}>
         <div className="avatar">
           <img
             src={perfil?.perfil_img ?? usr_img}

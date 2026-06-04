@@ -1,9 +1,9 @@
 import React from 'react';
 import '../assets/styles/Footer.css'; 
-import HomeIcon from '../assets/img/house-solid-full.svg';
-import ArchiveIcon from '../assets/img/box-archive-solid-full.svg'
-import WebIcon from '../assets/img/globe-solid-full.svg'
-import UsrIcon from '../assets/img/circle-user-solid-full.svg'
+import HomeIcon from '../assets/img/icons/house-solid-full.svg';
+import ArchiveIcon from '../assets/img/icons/box-archive-solid-full.svg'
+import WebIcon from '../assets/img/icons/globe-solid-full.svg'
+import UsrIcon from '../assets/img/icons/circle-user-solid-full.svg'
 
 const Footer = ({ style }) => {
   return (

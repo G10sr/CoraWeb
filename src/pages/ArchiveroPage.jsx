@@ -46,7 +46,7 @@ const saveComments = (pointId, comments) => {
   localStorage.setItem(commentsStorageKey(pointId), JSON.stringify(comments));
 };
 
-const carouselSections = ["Carrusel principal", "Puntos frecuentes", "Agregados recientemente"];
+const carouselSections = ["Principal", "Puntos frecuentes", "Agregados recientemente"];
 const regionOptions = allowedRegions;
 const getItemsPerView = () => {
   if (window.innerWidth <= 640) {

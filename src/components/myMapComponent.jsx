@@ -150,7 +150,7 @@ function MyMapComponent() {
                         position: [data.latitud, data.longitud],
                         name: data.reportado_por || 'Anónimo',
                         region: data.region,
-                        verified: false,
+                        verified: data.verified || false,
                         wasteType: data.tipo_residuo,
                         amount: data.cantidad,
                         slope: data.pendiente,
@@ -426,6 +426,7 @@ function MyMapComponent() {
                                 <b>Tipo:</b> {marker.wasteType}<br />
                                 <b>Cantidad:</b> {marker.amount}<br />
                                 <b>Riesgo declarado:</b> {marker.riskLevel}<br />
+                                <b>Estado:</b> {marker.verified ? "Verificado" : "No verificado"}<br />
                                 {analysis.valid && (
                                     <>
                                         <hr style={{ margin: '6px 0' }} />
