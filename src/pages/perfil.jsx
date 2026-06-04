@@ -25,18 +25,12 @@ function MiniMap({ position }) {
   return (
     <div
       onClick={handleClick}
-      style={{
-        height: "120px",
-        width: "100%",
-        borderRadius: "10px",
-        overflow: "hidden",
-        cursor: "pointer"
-      }}
+      className="mini-map-wrapper"
     >
       <MapContainer
         center={position}
         zoom={15}
-        style={{ height: "100%", width: "100%" }}
+        className="leaflet-map"
         zoomControl={false}
         dragging={false}
         scrollWheelZoom={false}
@@ -213,21 +207,17 @@ function Profile() {
                   }
                 >
                   <img
-                    style={{ width: "inherit", filter: "invert(0.02)" }}
+                    className="archive-icon"
                     src={ArchiveIcon}
                     alt="Archivar"
                   />
-                </div>              </div>
+                </div>
+              </div>
             ))}
           </div>
         </section>
       </div>
-      <Footer style={{
-        position: "fixed",
-        bottom: 0,
-        left: 0,
-        width: "100%",
-      }} />
+      <Footer />
     </div>
   );
 };

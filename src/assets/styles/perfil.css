@@ -29,6 +29,7 @@ body {
   border-radius: 50%;
   border: 4px solid #dcdcd2;
   background-color: #ccc;
+  overflow: hidden;
 }
 
 /* STATS */
@@ -88,8 +89,7 @@ p {
   grid-template-columns: repeat(3, 1fr);
   gap: 15px;
   margin-top: 10px;
-    margin-bottom: 200px;
-
+  margin-bottom: 200px;
 }
 
 .post-card {
@@ -100,9 +100,9 @@ p {
   height: 37vh;
   min-height: 280px;
   max-height: 320px;
-  overflow: scroll;
+  overflow: auto;
   overflow-x: hidden;
-  padding-inline : 12px;
+  padding-inline: 12px;
 }
 .post-card::-webkit-scrollbar {
   width: 0;
@@ -120,12 +120,11 @@ p {
   font-size: 12px;
 }
 
-.avatar{
-  overflow: hidden;
-  img {
-    height: 110%;
-    object-fit: cover;
-  }
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 .verification-status {
   background-color: #4caf50;
@@ -141,10 +140,15 @@ p {
 }
 
 .mini-map-wrapper {
-  height: 100px;
+  height: 120px;
   width: 100%;
   overflow: hidden;
   border-radius: 10px;
+  cursor: pointer;
+}
+.leaflet-map {
+  height: 100%;
+  width: 100%;
 }
 .post-info {
   margin-block: 10px;
@@ -173,8 +177,13 @@ p {
 .post-archive:hover {
   background-color: #7a9c6d;
   cursor: pointer;
-  
 }
 .post-archive:active {
   background-color: #9bcd80;
+}
+.post-archive img,
+.archive-icon {
+  width: 100%;
+  filter: invert(0.02);
+  display: block;
 }
