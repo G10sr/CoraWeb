@@ -1,7 +1,5 @@
 import './App.css'
-import { useState, useEffect } from 'react'
-
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 
 import './assets/styles/MapaHome.css'
 import Header from "./components/Header"
@@ -11,26 +9,42 @@ import ArchiveroPage from "./pages/ArchiveroPage"
 import Perfil from "./pages/Perfil"
 import Agente from "./components/AgenteCoraChat"
 import NotFound from "./pages/NotFound";
+import Login from './pages/Login';
 
+/* 🔥 ESTE COMPONENTE SÍ PUEDE USAR useLocation */
+function Layout() {
+  const location = useLocation();
 
-
-function App() {
+  const hideFooter = location.pathname === "/login";
 
   return (
-    <BrowserRouter>
-    <Header />
+    <>
+      <Header />
+
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/archivero" element={<ArchiveroPage />} />
         <Route path="/perfil" element={<Perfil />} />
+        <Route path="/login" element={<Login />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
-      <Footer />
-      <Agente />
-      
-    </BrowserRouter>
-    
-  )
+
+      {!hideFooter && (
+        <>
+          <Footer />
+          <Agente />
+        </>
+      )}
+    </>
+  );
 }
 
-export default App
+function App() {
+  return (
+    <BrowserRouter>
+      <Layout />
+    </BrowserRouter>
+  );
+}
+
+export default App;
