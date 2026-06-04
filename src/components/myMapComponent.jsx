@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap, useMapEvents, Circle, CircleMarker, Pane } from 'react-leaflet';
 
 // Importaciones FIREBASE
 import { db } from '../firebase/firebaseConfig';
@@ -301,11 +301,33 @@ function MyMapComponent() {
                 <RecenterMap position={userPosition} />
                 <MapEventsHandler onMapClick={handleMapClick} isActive={isAddingMode} />
 
-                {/* Ubicación del usuario */}
+                {/* precisión */}
                 {userPosition && (
-                    <Marker position={userPosition}>
-                        <Popup>Ubicación actual</Popup>
-                    </Marker>
+                    <Pane name="user-layer" style={{ zIndex: 1000 }}>
+                        <Circle
+                            center={userPosition}
+                            radius={50}
+                            pathOptions={{
+                                color: "#2A93EE",
+                                fillColor: "#2A93EE",
+                                fillOpacity: 0.15,
+                                weight: 1,
+                            }}
+                        />
+
+                        <CircleMarker
+                            center={userPosition}
+                            radius={8}
+                            pathOptions={{
+                                color: "#fff",
+                                weight: 2,
+                                fillColor: "#2A93EE",
+                                fillOpacity: 1,
+                            }}
+                        >
+                            <Popup>Ubicación actual</Popup>
+                        </CircleMarker>
+                    </Pane>
                 )}
 
                 {/* Marcador temporal con el Formulario */}
