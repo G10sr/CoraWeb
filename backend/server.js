@@ -98,10 +98,6 @@ app.post("/api/load-perfil", async (req, res) => {
       });
     }
 
-    console.log(
-      `[LOAD-PERFIL] Usuario: ${usuario[0].nombre} (${usuario[0].id})`
-    );
-
     return res.status(200).json({
       ok: true,
       perfil: usuario[0],
@@ -144,10 +140,6 @@ app.post("/api/agregar-punto", async (req, res) => {
         message: "Usuario no encontrado",
       });
     }
-
-    console.log(
-      `[AGREGAR-PUNTO] Usuario: ${usuario[0].nombre} - Punto: ${puntoId}`
-    );
 
     return res.status(200).json({
       ok: true,
