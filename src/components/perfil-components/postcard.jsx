@@ -33,6 +33,11 @@ const PostCard = ({
   onDelete,
   onVerify,
 }) => {
+  const description = post.description ?? "";
+  const summary =
+    description.length > 80
+      ? `${description.substring(0, 80)}...`
+      : description;
 
   return (
     <article className="post-card">
@@ -103,16 +108,7 @@ const PostCard = ({
             textos largos rompan el diseño.
         */}
 
-        <p>
-          {post.description.length > 80
-
-            ? `${post.description.substring(
-                0,
-                80
-              )}...`
-
-            : post.description}
-        </p>
+        <p>{summary}</p>
 
       </div>
 
@@ -139,8 +135,12 @@ const PostCard = ({
           */}
 
           <button
+            type="button"
             className="edit-btn"
-            onClick={() => onEdit(post)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit(post);
+            }}
           >
             Editar
           </button>
@@ -158,10 +158,12 @@ const PostCard = ({
           */}
 
           <button
+            type="button"
             className="delete-btn"
-            onClick={() =>
-              onDelete(post.id)
-            }
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(post.id);
+            }}
           >
             Borrar
           </button>
@@ -178,10 +180,12 @@ const PostCard = ({
           */}
 
           <button
+            type="button"
             className="verify-btn"
-            onClick={() =>
-              onVerify(post.id)
-            }
+            onClick={(e) => {
+              e.stopPropagation();
+              onVerify(post.id);
+            }}
           >
             {post.verified
               ? "Unverify"

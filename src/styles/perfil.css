@@ -1,10 +1,19 @@
 /* =========================
-   GLOBAL
+   PAGE LAYOUT
 ========================= */
 
-* {
-  margin: 0;
-  padding: 0;
+.profile-page-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.profile-page-wrapper .profile-page {
+  flex: 1;
+}
+
+.profile-page,
+.profile-page * {
   box-sizing: border-box;
 }
 
@@ -191,6 +200,12 @@ button:hover {
 
   border-radius: 8px;
   border: 1px solid #ccc;
+}
+
+.editor-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .character-counter {

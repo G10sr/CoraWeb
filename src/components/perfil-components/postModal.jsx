@@ -33,7 +33,6 @@ const PostModal = ({
   mode,
   post,
   onSave,
-  isAdmin,
 }) => {
 
   /*
@@ -114,6 +113,8 @@ const PostModal = ({
       post.image_url || ""
     );
 
+    setSelectedFile(null);
+
   }, [post]);
 
   /*
@@ -159,6 +160,10 @@ const PostModal = ({
     const preview =
       URL.createObjectURL(file);
 
+    if (imagePreview.startsWith("blob:")) {
+      URL.revokeObjectURL(imagePreview);
+    }
+
     setImagePreview(preview);
   };
 
@@ -181,19 +186,14 @@ const PostModal = ({
   */
 
   const handleSubmit = () => {
+    if (!post) return;
 
     const postData = {
-
       ...post,
-
-      title,
-      description,
-
+      title: title.trim(),
+      description: description.trim(),
       image_url: imagePreview,
-
-      imageFile:
-        selectedFile,
-
+      imageFile: selectedFile,
     };
 
     onSave(postData);
@@ -227,8 +227,10 @@ const PostModal = ({
         */}
 
         <button
+          type="button"
           className="close-modal-btn"
           onClick={onClose}
+          aria-label="Cerrar"
         >
           ×
         </button>
@@ -342,15 +344,15 @@ const PostModal = ({
               <div className="modal-actions">
 
                 <button
+                  type="button"
                   className="save-btn"
-                  onClick={
-                    handleSubmit
-                  }
+                  onClick={handleSubmit}
                 >
                   Guardar
                 </button>
 
                 <button
+                  type="button"
                   className="cancel-btn"
                   onClick={onClose}
                 >

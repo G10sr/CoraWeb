@@ -303,10 +303,9 @@ const PostsGrid = ({
         {isAdmin && (
 
           <button
+            type="button"
             className="create-post-btn"
-            onClick={
-              handleCreatePost
-            }
+            onClick={handleCreatePost}
           >
             + New Post
           </button>
@@ -402,7 +401,6 @@ const PostsGrid = ({
         mode={modalMode}
         post={selectedPost}
         onSave={handleSavePost}
-        isAdmin={isAdmin}
       />
 
     </section>

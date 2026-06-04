@@ -25,9 +25,9 @@ Visualizar → Editar → Guardar
 para evitar modificaciones accidentales.
 */
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-const pfStats = ({
+const PfStats = ({
   perfil,
   isAdmin,
   setPerfil,
@@ -83,6 +83,12 @@ const pfStats = ({
   */
 
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    if (!editingName) {
+      setNewName(perfil.name);
+    }
+  }, [perfil.name, editingName]);
 
   /*
   ====================================================
@@ -151,9 +157,13 @@ const pfStats = ({
     const imageUrl =
       URL.createObjectURL(file);
 
+    if (perfil.profileImage?.startsWith("blob:")) {
+      URL.revokeObjectURL(perfil.profileImage);
+    }
+
     setPerfil((prev) => ({
       ...prev,
-      pfImage: imageUrl,
+      profileImage: imageUrl,
     }));
 
     /*
@@ -164,7 +174,7 @@ const pfStats = ({
   };
 
   return (
-    <section className="pf-stats">
+    <section className="profile-header">
 
       {/* ==========================================
           PROFILE IMAGE SECTION
@@ -176,12 +186,12 @@ const pfStats = ({
           también permite cambiarla.
       */}
 
-      <div className="pf-image-container">
+      <div className="profile-image-container">
 
         <img
-          src={perfil.pfImage}
+          src={perfil.profileImage}
           alt={perfil.name}
-          className="pf-image"
+          className="profile-image"
         />
 
         {/* ======================================
@@ -195,9 +205,10 @@ const pfStats = ({
           <>
 
             <button
+              type="button"
               className="change-image-btn"
               onClick={() =>
-                fileInputRef.current.click()
+                fileInputRef.current?.click()
               }
             >
               Cambiar foto de perfil
@@ -234,7 +245,7 @@ const pfStats = ({
           el nombre del usuario.
       */}
 
-      <div className="pf-name-section">
+      <div className="profile-name-section">
 
         {!editingName ? (
 
@@ -243,6 +254,7 @@ const pfStats = ({
 
             {isAdmin && (
               <button
+                type="button"
                 className="edit-btn"
                 onClick={() =>
                   setEditingName(true)
@@ -278,6 +290,7 @@ const pfStats = ({
             />
 
             <button
+              type="button"
               className="save-btn"
               onClick={handleNameSave}
             >
@@ -285,6 +298,7 @@ const pfStats = ({
             </button>
 
             <button
+              type="button"
               className="cancel-btn"
               onClick={() => {
 
@@ -310,4 +324,4 @@ const pfStats = ({
   );
 };
 
-export default pfStats;
+export default PfStats;

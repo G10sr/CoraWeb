@@ -171,6 +171,7 @@ const AdminLogin = ({
         {!isAdmin ? (
 
           <button
+            type="button"
             className="admin-login-btn"
             onClick={() =>
               setShowModal(true)
@@ -182,6 +183,7 @@ const AdminLogin = ({
         ) : (
 
           <button
+            type="button"
             className="admin-logout-btn"
             onClick={handleLogout}
           >
@@ -231,6 +233,11 @@ const AdminLogin = ({
                   e.target.value
                 )
               }
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleLogin();
+                }
+              }}
             />
 
             {/* ==============================
@@ -264,6 +271,7 @@ const AdminLogin = ({
             <div className="modal-buttons">
 
               <button
+                type="button"
                 className="save-btn"
                 onClick={handleLogin}
               >
@@ -271,6 +279,7 @@ const AdminLogin = ({
               </button>
 
               <button
+                type="button"
                 className="cancel-btn"
                 onClick={() => {
 

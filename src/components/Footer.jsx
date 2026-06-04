@@ -1,4 +1,4 @@
-import React from 'react';
+import { Link } from 'react-router-dom';
 import '../assets/styles/Footer.css';
 
 import localizacion from '../icons/localizacion.svg';
@@ -11,19 +11,19 @@ const Footer = () => {
   return (
     <footer className="footer" data-tour="footer">
       <nav className="footer-content">
-        <a className="footer-item" href="/">
+        <Link className="footer-item" to="/">
           <span className="footer-icon">
             <img src={localizacion} alt="Home" />
           </span>
           <span className="footer-label">Home</span>
-        </a>
+        </Link>
 
-        <a className="footer-item" href="/archivero">
+        <Link className="footer-item" to="/archivero">
           <span className="footer-icon">
             <img src={buscar} alt="Archivero" />
           </span>
           <span className="footer-label">Archivero</span>
-        </a>
+        </Link>
 
         <a className="footer-item" href="#">
           <span className="footer-icon">
@@ -32,12 +32,12 @@ const Footer = () => {
           <span className="footer-label">Web informativa</span>
         </a>
 
-        <a className="footer-item" href="/perfil">
+        <Link className="footer-item" to="/perfil">
           <span className="footer-icon">
             <img src={pfp} alt="Perfil" />
           </span>
           <span className="footer-label">Perfil</span>
-        </a>
+        </Link>
       </nav>
     </footer>
   );

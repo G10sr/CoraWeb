@@ -23,11 +23,11 @@ Esto evita modificar los datos reales hasta que
 el usuario confirme los cambios.
 */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-const abtme = ({
-  profile,
-  setProfile,
+const Abtme = ({
+  perfil,
+  setPerfil,
   isAdmin,
 }) => {
 
@@ -66,8 +66,14 @@ const abtme = ({
   */
 
   const [abtText, setAbtText] = useState(
-    profile.abtme
+    perfil.aboutMe
   );
+
+  useEffect(() => {
+    if (!editing) {
+      setAbtText(perfil.aboutMe);
+    }
+  }, [perfil.aboutMe, editing]);
 
   /*
   ====================================================
@@ -89,9 +95,9 @@ const abtme = ({
   */
 
   const handleSave = () => {
-    setProfile((prev) => ({
+    setPerfil((prev) => ({
       ...prev,
-      abtme: abtText,
+      aboutMe: abtText,
     }));
 
     setEditing(false);
@@ -127,12 +133,12 @@ const abtme = ({
   */
 
   const handleCancel = () => {
-    setAbtText(profile.abtme);
+    setAbtText(perfil.aboutMe);
     setEditing(false);
   };
 
   return (
-    <section className="abt-section">
+    <section className="about-section">
 
       {/* ==========================================
           SECTION HEADER
@@ -154,6 +160,7 @@ const abtme = ({
 
         {isAdmin && !editing && (
           <button
+            type="button"
             className="edit-btn"
             onClick={() => setEditing(true)}
           >
@@ -173,8 +180,8 @@ const abtme = ({
       */}
 
       {!editing ? (
-        <p className="abt-text">
-          {profile.abtme}
+        <p className="about-text">
+          {perfil.aboutMe}
         </p>
       ) : (
 
@@ -189,7 +196,7 @@ const abtme = ({
         modificar temporalmente el texto.
         */
 
-        <div className="abt-editor">
+        <div className="about-editor">
 
           <textarea
             value={abtText}
@@ -226,6 +233,7 @@ const abtme = ({
           <div className="editor-actions">
 
             <button
+              type="button"
               className="save-btn"
               onClick={handleSave}
             >
@@ -233,6 +241,7 @@ const abtme = ({
             </button>
 
             <button
+              type="button"
               className="cancel-btn"
               onClick={handleCancel}
             >
@@ -264,4 +273,4 @@ const abtme = ({
   );
 };
 
-export default abtme;
+export default Abtme;
