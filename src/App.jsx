@@ -1,5 +1,5 @@
 import './App.css'
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom'
 
 import './assets/styles/MapaHome.css'
 import Header from "./components/Header"
@@ -16,7 +16,10 @@ function Layout() {
   const location = useLocation();
 
   const hideFooter = location.pathname === "/login";
-
+const user = JSON.parse(localStorage.getItem("user") || "null")?.id;
+  if (!user && !hideFooter) {
+    return <Navigate to="/login" replace />;
+  }
   return (
     <>
       <Header />

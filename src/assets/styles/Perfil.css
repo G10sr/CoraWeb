@@ -254,3 +254,7 @@ p {
     border-radius: 12px;
     margin-top: 15px;
 }
+#cora-logo-admin {
+  width: 24px;
+  filter:invert(1) drop-shadow(0 0 2px rgba(0, 42, 255, 0.8));
+}

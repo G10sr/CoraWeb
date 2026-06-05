@@ -10,6 +10,7 @@ import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { useNavigate } from "react-router-dom";
 import ArchiveIcon from "../assets/img/icons/box-archive-solid-full.svg";
+import CertificateIcon from "../assets/img/icons/certificate-solid-full.svg";
 
 
 
@@ -49,7 +50,8 @@ function MiniMap({ position }) {
 }
 
 function Profile() {
-  const USER_ID = "edd33b43-0cb5-477a-b574-8ae8949cd5bf";
+  const USER_ID = JSON.parse(localStorage.getItem("user")).id;
+  const USER_ROL = JSON.parse(localStorage.getItem("user")).rol;
   const navigate = useNavigate();
 
   let verifiedPosts = 0;
@@ -208,8 +210,13 @@ function Profile() {
       </div>
 
       <div className="content">
-        <h1 className="nature-title">{perfil ? perfil.nombre : "Cargando..."}</h1>
+<h1 className="nature-title">
+  {perfil ? perfil.nombre : "Cargando..."}
 
+  {USER_ROL === 2 && (
+    <img src={CertificateIcon} id="cora-logo-admin" alt="Logo rol 2" />
+  )}
+</h1>
         <section>
           <h2 className="aboutme">Sobre Mí</h2>
           <p>{perfil ? perfil.descripcion : "Cargando..."}</p>
@@ -285,7 +292,23 @@ function Profile() {
           </div>
         </section>
       </div>
-      <Footer />
+      <button
+  onClick={() => {
+    localStorage.clear(); // borra todo
+    navigate("/login");   // opcional: redirigir
+  }}
+  style={{
+    margin: "10px",
+    padding: "8px 12px",
+    background: "red",
+    color: "white",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+  }}
+>
+  🧹 Borrar localStorage (debug)
+</button>
     </div>
   );
 };

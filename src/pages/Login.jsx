@@ -9,7 +9,12 @@ const VALID_PASSWORD = "Alvaro123";
 
 // helper simple (sin ProtectedRoute)
 function isAuthenticated() {
-  return localStorage.getItem("user") !== null;
+  try {
+    const user = JSON.parse(localStorage.getItem("user") || "null");
+    return user?.id != null;
+  } catch (e) {
+    return false;
+  }
 }
 
 export default function Login() {
@@ -35,24 +40,39 @@ export default function Login() {
     const username = formData.username.trim();
     const password = formData.password;
 
-    if (username === VALID_USER && password === VALID_PASSWORD) {
-      // 🔥 guardamos usuario en "sesión"
-      localStorage.setItem(
-        "user",
-        JSON.stringify({
-          username,
-          id: "local-user"
-        })
-      );
-
-      navigate("/");
-    } else {
-      setError("Credenciales incorrectas. Intentalo de nuevo.");
+    try 
+    {
+      fetch("http://localhost:3000/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: username, password }),
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.ok === true) {
+            // 🔥 guardamos usuario en "sesión"
+            localStorage.setItem(
+              "user",
+              JSON.stringify({
+                id: data.id,
+                rol: data.rol
+              })
+            );
+            navigate("/");
+          } else {
+            setError("Credenciales incorrectas. Intentalo de nuevo.");
+          }
+          setLoading(false);
+        });
+    } catch (err) {
+      console.error("Error en login:", err);
+      setError("Error al conectar con el servidor. Intenta nuevamente.");
+      setLoading(false);
     }
-
-    setLoading(false);
-  };
-
+    };
+    
   return (
     <div className="login-page page-transition">
 

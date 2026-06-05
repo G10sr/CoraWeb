@@ -66,18 +66,16 @@ function RecenterMap({ position }) {
 
 // --- COMPONENTE PRINCIPAL ---
 function MyMapComponent() {
-    const USER_ID = "edd33b43-0cb5-477a-b574-8ae8949cd5bf";
+    const USER_ID = JSON.parse(localStorage.getItem("user")).id;
     const location = useLocation();
     const focusPoint = location.state?.focus;
     const [userPosition, setUserPosition] = useState(null);
-    const [focusPosition, setFocusPosition] = useState(null);
     const [customMarkers, setCustomMarkers] = useState([]);
     const [isAddingMode, setIsAddingMode] = useState(false);
     const [cargando, setCargando] = useState(false);
     const regionOptions = ["Colegio CTP CIT", "Soda armonia"];
     const [perfil, setPerfil] = useState(null);
 
-    
 
     async function cargarPerfil() {
         try {
@@ -127,7 +125,7 @@ function MyMapComponent() {
     }, [perfil]);
     useEffect(() => {
         if (focusPoint) {
-            setFocusPosition(focusPoint);
+            setUserPosition(focusPoint);
         }
     }, [focusPoint]);
 
@@ -300,7 +298,7 @@ function MyMapComponent() {
 
             <MapContainer center={[9.9772, -84.1833]} zoom={13} style={{ height: '100%', width: '100%' }}>
                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                <RecenterMap position={focusPosition || userPosition} />
+                <RecenterMap position={userPosition} />
                 <MapEventsHandler onMapClick={handleMapClick} isActive={isAddingMode} />
 
                 {/* precisión */}
