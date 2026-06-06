@@ -21,10 +21,13 @@ function MiniMap({ position }) {
   if (!position) return null;
 
   const handleClick = () => {
-    navigate("/", {
-      state: { focus: position }
-    });
-  };
+  navigate("/", {
+    state: {
+      focus: position,
+      skipLocationFly: true
+    }
+  });
+};
 
   return (
     <div

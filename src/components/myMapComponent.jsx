@@ -1,5 +1,6 @@
 // --- IMPORTACIONES ---
 import { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from "react-router-dom";
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap, useMapEvents, Circle, CircleMarker, Pane } from 'react-leaflet';
@@ -11,8 +12,6 @@ import { collection, addDoc, serverTimestamp, query, onSnapshot } from "firebase
 // AgenteCora: analisis de riesgo del formulario
 import { analyzeReport } from '../agent/agenteCora';
 import '../assets/styles/AgenteCora.css';
-
-import { useLocation } from "react-router-dom";
 
 
 // Rectangulo de calificacion que AgenteCora coloca junto al punto
@@ -54,27 +53,47 @@ function MapEventsHandler({ onMapClick, isActive }) {
     return null;
 }
 
-function RecenterMap({ position }) {
+function RecenterMap({ position, disabled }) {
     const map = useMap();
+
+    useEffect(() => {
+        if (position && !disabled) {
+            map.flyTo(position, 16);
+        }
+    }, [position, map, disabled]);
+
+    return null;
+}
+
+function FocusMap({ position }) {
+    const map = useMap();
+
     useEffect(() => {
         if (position) {
             map.flyTo(position, 16);
         }
     }, [position, map]);
+
     return null;
 }
 
 // --- COMPONENTE PRINCIPAL ---
 function MyMapComponent() {
     const USER_ID = JSON.parse(localStorage.getItem("user")).id;
-    const location = useLocation();
+const location = useLocation();
+const navigate = useNavigate();
     const focusPoint = location.state?.focus;
+    const skipLocationFly = location.state?.skipLocationFly;
+    const [focusPosition, setFocusPosition] = useState(null);
     const [userPosition, setUserPosition] = useState(null);
     const [customMarkers, setCustomMarkers] = useState([]);
     const [isAddingMode, setIsAddingMode] = useState(false);
     const [cargando, setCargando] = useState(false);
     const regionOptions = ["Colegio CTP CIT", "Soda armonia"];
     const [perfil, setPerfil] = useState(null);
+    const [locationEnabled, setLocationEnabled] = useState(() => {
+        return localStorage.getItem("locationEnabled") === "true";
+    });
 
 
     async function cargarPerfil() {
@@ -115,6 +134,7 @@ function MyMapComponent() {
         riskLevel: 'bajo',
         materialType: 'reciclable'
     });
+
     useEffect(() => {
         if (perfil) {
             setFormData(prev => ({
@@ -123,17 +143,37 @@ function MyMapComponent() {
             }));
         }
     }, [perfil]);
-    useEffect(() => {
-        if (focusPoint) {
-            setUserPosition(focusPoint);
-        }
-    }, [focusPoint]);
 
     useEffect(() => {
         if (tempMarker) {
             cargarPerfil();
         }
     }, [tempMarker]);
+
+useEffect(() => {
+    if (!focusPoint) return;
+
+    setFocusPosition(focusPoint);
+
+    window.history.replaceState({}, document.title);
+}, [focusPoint]);
+
+    useEffect(() => {
+        if (locationEnabled && "geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    setUserPosition([
+                        pos.coords.latitude,
+                        pos.coords.longitude
+                    ]);
+                },
+                (error) => {
+                    console.error(error);
+                },
+                { enableHighAccuracy: true }
+            );
+        }
+    }, [locationEnabled]);
 
     useEffect(() => {
         const reportesRef = collection(db, "reportes");
@@ -197,6 +237,34 @@ function MyMapComponent() {
         });
     };
 
+    const toggleLocation = () => {
+        if (locationEnabled) {
+            // Desactivar ubicación
+            setUserPosition(null);
+            setLocationEnabled(false);
+            localStorage.setItem("locationEnabled", "false");
+            return;
+        }
+
+        // Activar ubicación
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    setUserPosition([
+                        pos.coords.latitude,
+                        pos.coords.longitude
+                    ]);
+
+                    setLocationEnabled(true);
+                    localStorage.setItem("locationEnabled", "true");
+                },
+                (error) => {
+                    alert("Error al obtener ubicación: " + error.message);
+                },
+                { enableHighAccuracy: true }
+            );
+        }
+    };
     // Funcion para guardae en FIREBASE
     const handleFormSubmit = async (e) => {
         e.preventDefault();
@@ -280,8 +348,14 @@ function MyMapComponent() {
             }}>
                 <h2 className="nature-title" style={{ margin: '0', fontSize: '1.3rem' }}>Cora Web</h2>
 
-                <button data-tour="location" onClick={activateLocation} style={btnStyle(userPosition ? '#4dcec5' : '#00978D')}>
-                    {userPosition ? 'Ubicación Lista' : 'Activar mi ubicación'}
+                <button
+                    data-tour="location"
+                    onClick={toggleLocation}
+                    style={btnStyle(locationEnabled ? '#4dcec5' : '#00978D')}
+                >
+                    {locationEnabled
+                        ? 'Desactivar ubicación'
+                        : 'Activar mi ubicación'}
                 </button>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -298,7 +372,12 @@ function MyMapComponent() {
 
             <MapContainer center={[9.9772, -84.1833]} zoom={13} style={{ height: '100%', width: '100%' }}>
                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                <RecenterMap position={userPosition} />
+                <FocusMap position={focusPosition} />
+
+                <RecenterMap
+                    position={userPosition}
+                    disabled={skipLocationFly}
+                />
                 <MapEventsHandler onMapClick={handleMapClick} isActive={isAddingMode} />
 
                 {/* precisión */}
