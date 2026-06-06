@@ -10,6 +10,7 @@ import Perfil from "./pages/Perfil"
 import Agente from "./components/AgenteCoraChat"
 import NotFound from "./pages/NotFound";
 import Login from './pages/Login';
+import CoraTour from "./components/CoraTour";
 
 /* 🔥 ESTE COMPONENTE SÍ PUEDE USAR useLocation */
 function Layout() {
@@ -32,10 +33,11 @@ const user = JSON.parse(localStorage.getItem("user") || "null")?.id;
         <Route path="*" element={<NotFound />} />
       </Routes>
 
-      {!hideFooter && (
+        {!hideFooter && (
         <>
           <Footer />
           <Agente />
+          <CoraTour />
         </>
       )}
     </>
