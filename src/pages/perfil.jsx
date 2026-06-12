@@ -239,7 +239,7 @@ function Profile() {
 </h1>
         <section>
           <h2 className="aboutme">Sobre Mí</h2>
-          <p>{perfil ? perfil.descripcion : "Cargando..."}</p>
+          <p>{perfil ? perfil.aboutme : "Cargando..."}</p>
         </section>
 
         <section>

@@ -62,6 +62,8 @@ function PointDetailModal({ point, onClose }) {
   const [commentAuthor, setCommentAuthor] = useState("");
   const [commentText, setCommentText] = useState("");
   const [comments, setComments] = useState(() => loadComments(point.id));
+  const USER_ID = JSON.parse(localStorage.getItem("user")).id;
+  const USER_ROL = JSON.parse(localStorage.getItem("user")).rol;
 
   useEffect(() => {
     const handleKeyDown = (event) => {

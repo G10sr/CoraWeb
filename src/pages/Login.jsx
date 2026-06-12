@@ -4,10 +4,7 @@ import Header from "../components/Header.jsx";
 import logo from "../assets/img/CoraLogo.png";
 import "../assets/styles/Login.css";
 
-const VALID_USER = "Alvaro";
-const VALID_PASSWORD = "Alvaro123";
 
-// helper simple (sin ProtectedRoute)
 function isAuthenticated() {
   try {
     const user = JSON.parse(localStorage.getItem("user") || "null");
@@ -52,7 +49,6 @@ export default function Login() {
         .then((r) => r.json())
         .then((data) => {
           if (data.ok === true) {
-            // 🔥 guardamos usuario en "sesión"
             localStorage.setItem(
               "user",
               JSON.stringify({

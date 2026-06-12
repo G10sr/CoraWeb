@@ -197,9 +197,62 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
+
+
+app.get("/api/reportes", async (req, res) => {
+  try {
+
+    const reportes = await sql`
+      SELECT
+        r.*,
+        u.nombre AS reportado_por,
+        reg.region_name
+      FROM reportes r
+      INNER JOIN usuarios u
+        ON u.id = r.reportado_por
+      LEFT JOIN region reg
+        ON reg.id = r.region_id
+      ORDER BY r.fecha_creacion DESC
+    `;
+
+    return res.json({
+      ok: true,
+      reportes
+    });
+
+  } catch (error) {
+
+    console.error(error);
+
+    return res.status(500).json({
+      ok: false
+    });
+
+  }
+});
+
+
+app.get("/api/regiones", async (req, res) => {
+
+  const regiones = await sql`
+    SELECT *
+    FROM region
+    ORDER BY region_name
+  `;
+
+  res.json({
+    ok: true,
+    regiones
+  });
+
+});
 // =====================================================
 // SERVER
 // =====================================================
+
+
+
+
 
 const PORT = process.env.PORT || 3000;
 
