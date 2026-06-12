@@ -12,12 +12,11 @@ import NotFound from "./pages/NotFound";
 import Login from './pages/Login';
 import CoraTour from "./components/CoraTour";
 
-/* 🔥 ESTE COMPONENTE SÍ PUEDE USAR useLocation */
 function Layout() {
   const location = useLocation();
 
   const hideFooter = location.pathname === "/login";
-const user = JSON.parse(localStorage.getItem("user") || "null")?.id;
+  const user = JSON.parse(localStorage.getItem("user") || "null")?.id;
   if (!user && !hideFooter) {
     return <Navigate to="/login" replace />;
   }
@@ -33,7 +32,7 @@ const user = JSON.parse(localStorage.getItem("user") || "null")?.id;
         <Route path="*" element={<NotFound />} />
       </Routes>
 
-        {!hideFooter && (
+      {!hideFooter && (
         <>
           <Footer />
           <Agente />

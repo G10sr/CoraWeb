@@ -199,6 +199,23 @@ function Profile() {
             alt="Avatar"
           />
         </div>
+        <button
+  onClick={() => {
+    localStorage.clear(); // borra todo
+    navigate("/login");   // opcional: redirigir
+  }}
+  style={{
+    margin: "10px",
+    padding: "8px 12px",
+    background: "red",
+    color: "white",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+  }}
+>
+  🧹 Borrar localStorage (debug)
+</button>
 
         <div className="stats">
           <div>
@@ -295,23 +312,7 @@ function Profile() {
           </div>
         </section>
       </div>
-      <button
-  onClick={() => {
-    localStorage.clear(); // borra todo
-    navigate("/login");   // opcional: redirigir
-  }}
-  style={{
-    margin: "10px",
-    padding: "8px 12px",
-    background: "red",
-    color: "white",
-    border: "none",
-    borderRadius: "6px",
-    cursor: "pointer",
-  }}
->
-  🧹 Borrar localStorage (debug)
-</button>
+      
     </div>
   );
 };
