@@ -4,10 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap, useMapEvents, Circle, CircleMarker, Pane } from 'react-leaflet';
-
-// Importaciones FIREBASE
-import { db } from '../firebase/firebaseConfig';
-import { collection, addDoc, serverTimestamp, query, onSnapshot } from "firebase/firestore";
+import { supabase } from '../lib/supabaseClient';
 
 // AgenteCora: analisis de riesgo del formulario
 import { analyzeReport } from '../agent/agenteCora';
@@ -89,7 +86,7 @@ const navigate = useNavigate();
     const [customMarkers, setCustomMarkers] = useState([]);
     const [isAddingMode, setIsAddingMode] = useState(false);
     const [cargando, setCargando] = useState(false);
-    const regionOptions = ["Colegio CTP CIT", "Soda armonia"];
+    const [regionOptions, setRegionOptions] = useState([]);
     const [perfil, setPerfil] = useState(null);
     const [locationEnabled, setLocationEnabled] = useState(() => {
         return localStorage.getItem("locationEnabled") === "true";
@@ -126,7 +123,7 @@ const navigate = useNavigate();
     const [tempMarker, setTempMarker] = useState(null);
     const [formData, setFormData] = useState({
         name: '',
-        region: regionOptions[0],
+        region: '',
         wasteType: 'organico',
         amount: '',
         slope: 'plano',
@@ -149,6 +146,27 @@ const navigate = useNavigate();
             cargarPerfil();
         }
     }, [tempMarker]);
+
+    useEffect(() => {
+        const cargarRegiones = async () => {
+            try {
+                const response = await fetch("http://localhost:3000/api/regiones");
+                const data = await response.json();
+                if (!data.ok) {
+                    throw new Error(data.message || "Error al cargar regiones");
+                }
+                const opciones = data.regiones.map((region) => region.region_name);
+                setRegionOptions(opciones);
+                setFormData((prev) => ({
+                    ...prev,
+                    region: prev.region || opciones[0] || ''
+                }));
+            } catch (error) {
+                console.error("Error al cargar regiones:", error);
+            }
+        };
+        cargarRegiones();
+    }, []);
 
 useEffect(() => {
     if (!focusPoint) return;
@@ -175,39 +193,55 @@ useEffect(() => {
         }
     }, [locationEnabled]);
 
+    async function cargarReportes() {
+        try {
+            const response = await fetch("http://localhost:3000/api/reportes");
+            const data = await response.json();
+
+            if (!data.ok) {
+                throw new Error(data.message || "Error al cargar reportes");
+            }
+
+            const puntos = data.reportes.map((reporte) => ({
+                id: reporte.id,
+                position: [reporte.latitud, reporte.longitud],
+                name: reporte.reportado_por || 'Anónimo',
+                region: reporte.region_name || 'Sin región',
+                verified: reporte.verificado || false,
+                wasteType: reporte.tipo_residuo,
+                amount: reporte.cantidad,
+                slope: reporte.pendiente,
+                waterProximity: reporte.cercania_agua,
+                riskLevel: reporte.riesgo_contaminacion,
+                materialType: reporte.clasificacion_material,
+                timestamp: reporte.fecha_creacion ? new Date(reporte.fecha_creacion).toLocaleTimeString() : new Date().toLocaleTimeString()
+            }));
+
+            console.log("Reportes cargados:", puntos.length, puntos);
+            setCustomMarkers(puntos);
+        } catch (error) {
+            console.error("Error al cargar reportes:", error);
+        }
+    }
+
     useEffect(() => {
-        const reportesRef = collection(db, "reportes");
-        const q = query(reportesRef);
+        cargarReportes();
 
-        const unsubscribe = onSnapshot(q, (querySnapshot) => {
-            const puntosFirebase = [];
-
-            querySnapshot.forEach((doc) => {
-                const data = doc.data();
-                if (data.latitud && data.longitud) {
-                    puntosFirebase.push({
-                        id: doc.id,
-                        position: [data.latitud, data.longitud],
-                        name: data.reportado_por || 'Anónimo',
-                        region: data.region,
-                        verified: data.verified || false,
-                        wasteType: data.tipo_residuo,
-                        amount: data.cantidad,
-                        slope: data.pendiente,
-                        waterProximity: data.cercania_agua,
-                        riskLevel: data.riesgo_contaminacion,
-                        materialType: data.clasificacion_material,
-                        timestamp: data.fecha_creacion ? new Date(data.fecha_creacion.seconds * 1000).toLocaleTimeString() : new Date().toLocaleTimeString()
-                    });
+        const channel = supabase
+            .channel('reportes-realtime')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'reportes' },
+                (payload) => {
+                    console.log('Supabase realtime reportes:', payload);
+                    cargarReportes();
                 }
-            });
+            )
+            .subscribe();
 
-            setCustomMarkers(puntosFirebase);
-        }, (error) => {
-            console.error("Error al traer puntos en tiempo real: ", error);
-        });
-
-        return () => unsubscribe();
+        return () => {
+            supabase.removeChannel(channel);
+        };
     }, []);
 
     const activateLocation = () => {
@@ -223,7 +257,7 @@ useEffect(() => {
     const handleMapClick = (latlng) => {
         setFormData({
             name: '',
-            region: regionOptions[0],
+            region: regionOptions[0] || '',
             wasteType: 'organico',
             amount: '',
             slope: 'plano',
@@ -265,10 +299,9 @@ useEffect(() => {
             );
         }
     };
-    // Funcion para guardae en FIREBASE
     const handleFormSubmit = async (e) => {
         e.preventDefault();
-        if (!formData.name || !formData.amount) {
+        if (!formData.amount) {
             alert("Por favor completa los campos obligatorios antes de guardar.");
             return;
         }
@@ -276,53 +309,40 @@ useEffect(() => {
         setCargando(true);
 
         try {
-            const reportesRef = collection(db, "reportes");
-
-
-            const docRef = await addDoc(reportesRef, {
-                usuario_id: USER_ID,
-                reportado_por: formData.name,
-                region: formData.region,
-                tipo_residuo: formData.wasteType,
-                cantidad: Number(formData.amount),
-                pendiente: formData.slope,
-                cercania_agua: formData.waterProximity,
-                riesgo_contaminacion: formData.riskLevel,
-                clasificacion_material: formData.materialType,
-                latitud: tempMarker.position[0],
-                longitud: tempMarker.position[1],
-                fecha_creacion: serverTimestamp()
+            const response = await fetch("http://localhost:3000/api/reportes", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    usuarioId: USER_ID,
+                    regionName: formData.region,
+                    wasteType: formData.wasteType,
+                    amount: Number(formData.amount),
+                    slope: formData.slope,
+                    waterProximity: formData.waterProximity,
+                    riskLevel: formData.riskLevel,
+                    materialType: formData.materialType,
+                    latitud: tempMarker.position[0],
+                    longitud: tempMarker.position[1],
+                }),
             });
-
-            const response = await fetch(
-                "http://localhost:3000/api/agregar-punto",
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        id: USER_ID,
-                        puntoId: docRef.id
-                    }),
-                }
-            );
 
             const data = await response.json();
 
             if (!data.ok) {
-                throw new Error(data.message);
+                throw new Error(data.message || "Error al guardar el reporte");
             }
 
-            // 3. Actualizar perfil local
-            setPerfil(data.perfil);
+            await cargarPerfil();
+            await cargarReportes();
 
             alert("Punto registrado correctamente");
             setTempMarker(null);
 
         } catch (error) {
-            console.error("Error al guardar en Firebase:", error);
-            alert("Hubo un error al conectar con Firebase.");
+            console.error("Error al guardar el reporte:", error);
+            alert("Hubo un error al guardar el reporte. " + error.message);
         } finally {
             setCargando(false);
         }
@@ -432,9 +452,13 @@ useEffect(() => {
                                     onChange={(e) => setFormData({ ...formData, region: e.target.value })}
                                     style={{ padding: '5px' }}
                                 >
-                                    {regionOptions.map((region) => (
-                                        <option value={region} key={region}>{region}</option>
-                                    ))}
+                                    {regionOptions.length > 0 ? (
+                                        regionOptions.map((region) => (
+                                            <option value={region} key={region}>{region}</option>
+                                        ))
+                                    ) : (
+                                        <option value="" disabled>Cargando regiones...</option>
+                                    )}
                                 </select>
 
                                 {/* Tipo de Residuo */}

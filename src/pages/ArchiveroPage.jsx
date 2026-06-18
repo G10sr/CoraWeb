@@ -6,8 +6,6 @@ import "../assets/styles/ArchiveroPage.css";
 import basura1 from "../assets/img/basura1.jpg";
 import basura2 from "../assets/img/basura2.jpg";
 import basura3 from "../assets/img/basura3.webp";
-import { db } from "../firebase/firebaseConfig";
-import { collection, onSnapshot, query } from "firebase/firestore";
 import { analyzeReport } from "../agent/agenteCora";
 import "../assets/styles/AgenteCora.css";
 
@@ -233,43 +231,52 @@ function ArchiveroPage() {
   }, [targetPointId, firebasePoints]);
 
   useEffect(() => {
-    const reportesRef = collection(db, "reportes");
-    const q = query(reportesRef);
-    const unsubscribe = onSnapshot(
-      q,
-      (querySnapshot) => {
-        const puntos = [];
-        querySnapshot.forEach((docSnap) => {
-          const data = docSnap.data();
-          const region = allowedRegions.includes(data.region) ? data.region : "Colegio CTP CIT";
-          const name = data.reportado_por ? `Reporte de ${data.reportado_por}` : "Reporte sin nombre";
+    const cargarPuntos = async () => {
+      try {
+        const response = await fetch("http://localhost:3000/api/reportes");
+        const data = await response.json();
+
+        if (!data.ok) {
+          throw new Error(data.message || "Error al cargar puntos");
+        }
+
+        const puntos = data.reportes.map((reporte) => {
+          const region = allowedRegions.includes(reporte.region_name)
+            ? reporte.region_name
+            : "Colegio CTP CIT";
+
+          const name = reporte.reportado_por ? `Reporte de ${reporte.reportado_por}` : "Reporte sin nombre";
+          const createdAt = reporte.fecha_creacion ? new Date(reporte.fecha_creacion).getTime() : null;
+
           const point = {
-            id: docSnap.id,
+            id: reporte.id,
             name,
             region,
-            image: imagePool[hashStringToIndex(docSnap.id, imagePool.length)],
-            wasteType: data.tipo_residuo,
-            verified: data.verified || false,
-            amount: data.cantidad,
-            slope: data.pendiente,
-            waterProximity: data.cercania_agua,
-            riskLevel: data.riesgo_contaminacion,
-            materialType: data.clasificacion_material,
-            position: data.latitud && data.longitud ? [data.latitud, data.longitud] : null,
-            createdAt: data.fecha_creacion?.seconds ? data.fecha_creacion.seconds * 1000 : null,
+            image: imagePool[hashStringToIndex(reporte.id, imagePool.length)],
+            wasteType: reporte.tipo_residuo,
+            verified: reporte.verificado || false,
+            amount: reporte.cantidad,
+            slope: reporte.pendiente,
+            waterProximity: reporte.cercania_agua,
+            riskLevel: reporte.riesgo_contaminacion,
+            materialType: reporte.clasificacion_material,
+            position: reporte.latitud != null && reporte.longitud != null ? [reporte.latitud, reporte.longitud] : null,
+            createdAt,
           };
+
           point.description = defaultDescription(point.name, region, point.verified);
           point.analysis = analyzeReport(point);
-          puntos.push(point);
+          return point;
         });
+
         puntos.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
         setFirebasePoints(puntos);
-      },
-      (error) => {
-        console.error("Error al leer puntos de Firebase:", error);
-      },
-    );
-    return () => unsubscribe();
+      } catch (error) {
+        console.error("Error al cargar puntos del backend:", error);
+      }
+    };
+
+    cargarPuntos();
   }, []);
 
   const mergedPoints = firebasePoints;

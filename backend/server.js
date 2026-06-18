@@ -202,41 +202,190 @@ app.post("/api/login", async (req, res) => {
 app.get("/api/reportes", async (req, res) => {
   try {
 
-    const reportes = await sql`
+    const { usuarioId } = req.query;
+
+    const reportesRaw = await sql`
       SELECT
-        r.*,
-        u.nombre AS reportado_por,
+        r.id,
+        r.cantidad,
+        r.cercania_agua,
+        r.clasificacion_material,
+        r.fecha_creacion,
+        r.latitud,
+        r.longitud,
+        r.pendiente,
+        r.region_id,
+        r.reportado_por,
+        r.riesgo_contaminacion,
+        r.tipo_residuo,
+        r.verificado,
+        u.nombre AS reportado_por_nombre,
         reg.region_name
       FROM reportes r
       INNER JOIN usuarios u
         ON u.id = r.reportado_por
-      LEFT JOIN region reg
+      LEFT JOIN regiones reg
         ON reg.id = r.region_id
+      ${usuarioId ? sql`WHERE r.reportado_por = ${usuarioId}` : sql``}
       ORDER BY r.fecha_creacion DESC
     `;
 
+    const reportes = reportesRaw.map((reporte) => ({
+      id: reporte.id,
+      cantidad: reporte.cantidad,
+      cercania_agua: reporte.cercania_agua,
+      clasificacion_material: reporte.clasificacion_material,
+      fecha_creacion: reporte.fecha_creacion ? new Date(reporte.fecha_creacion).toISOString() : null,
+      latitud: reporte.latitud,
+      longitud: reporte.longitud,
+      pendiente: reporte.pendiente,
+      region_id: reporte.region_id != null ? reporte.region_id.toString() : null,
+      reportado_por: reporte.reportado_por_nombre || reporte.reportado_por,
+      riesgo_contaminacion: reporte.riesgo_contaminacion,
+      tipo_residuo: reporte.tipo_residuo,
+      verificado: reporte.verificado,
+      region_name: reporte.region_name,
+    }));
+
     return res.json({
       ok: true,
-      reportes
+      reportes,
     });
 
   } catch (error) {
-
-    console.error(error);
+    console.error("GET /api/reportes error:", error);
 
     return res.status(500).json({
-      ok: false
+      ok: false,
+      message: error.message,
     });
+  }
+});
+app.post("/api/reportes", async (req, res) => {
+  try {
+    const {
+      usuarioId,
+      regionName,
+      wasteType,
+      amount,
+      slope,
+      waterProximity,
+      riskLevel,
+      materialType,
+      latitud,
+      longitud,
+    } = req.body;
 
+    if (!usuarioId || !amount || latitud == null || longitud == null) {
+      return res.status(400).json({
+        ok: false,
+        message: "usuarioId, amount, latitud y longitud son requeridos",
+      });
+    }
+
+    let regionId = null;
+    if (regionName) {
+      const region = await sql`
+        SELECT id
+        FROM regiones
+        WHERE region_name = ${regionName}
+        LIMIT 1
+      `;
+
+      if (region.length > 0) {
+        regionId = region[0].id;
+      } else {
+        const insertedRegion = await sql`
+          INSERT INTO regiones (region_name)
+          VALUES (${regionName})
+          RETURNING id
+        `;
+        regionId = insertedRegion[0]?.id;
+      }
+    }
+
+    const nuevoReporte = await sql`
+      INSERT INTO reportes (
+        cantidad,
+        cercania_agua,
+        clasificacion_material,
+        latitud,
+        longitud,
+        pendiente,
+        region_id,
+        reportado_por,
+        riesgo_contaminacion,
+        tipo_residuo
+      ) VALUES (
+        ${amount},
+        ${waterProximity},
+        ${materialType},
+        ${latitud},
+        ${longitud},
+        ${slope},
+        ${regionId},
+        ${usuarioId},
+        ${riskLevel},
+        ${wasteType}
+      )
+      RETURNING *
+    `;
+
+    return res.status(201).json({
+      ok: true,
+      reporte: nuevoReporte[0],
+    });
+  } catch (error) {
+    console.error("Error interno:", error);
+    return res.status(500).json({
+      ok: false,
+      message: "Error interno del servidor",
+    });
   }
 });
 
+app.delete("/api/reportes/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { usuarioId } = req.body;
 
+    if (!id || !usuarioId) {
+      return res.status(400).json({
+        ok: false,
+        message: "id y usuarioId son requeridos",
+      });
+    }
+
+    const deleted = await sql`
+      DELETE FROM reportes
+      WHERE id = ${id} AND reportado_por = ${usuarioId}
+      RETURNING *
+    `;
+
+    if (deleted.length === 0) {
+      return res.status(404).json({
+        ok: false,
+        message: "Reporte no encontrado o no autorizado",
+      });
+    }
+
+    return res.status(200).json({
+      ok: true,
+      reporte: deleted[0],
+    });
+  } catch (error) {
+    console.error("Error eliminando reporte:", error);
+    return res.status(500).json({
+      ok: false,
+      message: "Error interno del servidor",
+    });
+  }
+});
 app.get("/api/regiones", async (req, res) => {
 
   const regiones = await sql`
     SELECT *
-    FROM region
+    FROM regiones
     ORDER BY region_name
   `;
 

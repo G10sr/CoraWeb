@@ -4,8 +4,6 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useEffect, useState } from "react";
 import usr_img from "../assets/img/usr_unk.jpeg";
-import { doc, getDoc, deleteDoc, updateDoc } from "firebase/firestore";
-import { db } from "../firebase/firebaseConfig";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { useNavigate } from "react-router-dom";
@@ -82,30 +80,26 @@ function Profile() {
     if (!confirmar) return;
 
     try {
-      // Eliminar de Firebase
-      await deleteDoc(doc(db, "reportes", postId));
-
-      // Eliminar referencia del perfil
-      await fetch("http://localhost:3000/api/eliminar-punto", {
-        method: "POST",
+      const response = await fetch(`http://localhost:3000/api/reportes/${postId}`, {
+        method: "DELETE",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          id: USER_ID,
-          puntoId: postId,
+          usuarioId: USER_ID,
         }),
       });
 
-      // Actualizar la UI
-      setPosts((prev) =>
-        prev.filter((post) => post.id !== postId)
-      );
+      const data = await response.json();
+      if (!data.ok) {
+        throw new Error(data.message || "No se pudo eliminar el reporte");
+      }
 
+      setPosts((prev) => prev.filter((post) => post.id !== postId));
       alert("Reporte eliminado correctamente");
     } catch (error) {
       console.error(error);
-      alert("Error al eliminar el reporte");
+      alert("Error al eliminar el reporte: " + error.message);
     }
   };
   async function cargarPerfil() {
@@ -136,48 +130,41 @@ function Profile() {
 
 
   useEffect(() => {
-    if (perfil?.puntos_registrados?.length > 0) {
-      cargarPostsFirebase();
+    if (perfil) {
+      cargarPostsBackend();
     }
   }, [perfil]);
 
-  async function cargarPostsFirebase() {
+  async function cargarPostsBackend() {
     try {
-      const postsFirebase = await Promise.all(
-        perfil.puntos_registrados.map(async (postId, index) => {
-          const docRef = doc(db, "reportes", postId);
-          const docSnap = await getDoc(docRef);
+      const response = await fetch(`http://localhost:3000/api/reportes?usuarioId=${USER_ID}`);
+      const data = await response.json();
 
-          if (!docSnap.exists()) {
-            console.warn(`No existe el reporte ${postId}`);
-            return null;
-          }
+      if (!data.ok) {
+        throw new Error(data.message || "Error al cargar reportes");
+      }
 
-          const data = docSnap.data();
+      const postsBackend = data.reportes.map((reporte, index) => ({
+        id: reporte.id,
+        index,
+        verified: reporte.verificado || false,
+        position: [reporte.latitud, reporte.longitud],
+        name: reporte.reportado_por || "Anónimo",
+        region: reporte.region_name || reporte.region_id || "Sin región",
+        wasteType: reporte.tipo_residuo,
+        amount: reporte.cantidad,
+        slope: reporte.pendiente,
+        waterProximity: reporte.cercania_agua,
+        riskLevel: reporte.riesgo_contaminacion,
+        materialType: reporte.clasificacion_material,
+        timestamp: reporte.fecha_creacion
+          ? new Date(reporte.fecha_creacion).toLocaleTimeString()
+          : new Date().toLocaleTimeString(),
+      }));
 
-          return {
-            id: docSnap.id,
-            index,
-            verified: data.verified || false,
-            position: [data.latitud, data.longitud],
-            name: data.reportado_por || "Anónimo",
-            region: data.region,
-            wasteType: data.tipo_residuo,
-            amount: data.cantidad,
-            slope: data.pendiente,
-            waterProximity: data.cercania_agua,
-            riskLevel: data.riesgo_contaminacion,
-            materialType: data.clasificacion_material,
-            timestamp: data.fecha_creacion
-              ? new Date(data.fecha_creacion.seconds * 1000).toLocaleTimeString()
-              : new Date().toLocaleTimeString(),
-          };
-        })
-      );
-
-      setPosts(postsFirebase.filter(post => post !== null));
+      setPosts(postsBackend);
     } catch (error) {
-      console.error("Error cargando posts:", error);
+      console.error("Error cargando posts desde backend:", error);
     }
   }
 
