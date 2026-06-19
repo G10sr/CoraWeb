@@ -272,13 +272,14 @@ function Profile() {
 
                   <div className="post-actions">
                     <span>✎</span>
-
-                    <span
-                      style={{ cursor: "pointer" }}
-                      onClick={() => eliminarPost(post.id)}
-                    >
-                      🗑
-                    </span>
+                    {!post.verified ? (
+                      <span
+                        style={{ cursor: "pointer" }}
+                        onClick={() => eliminarPost(post.id)}
+                      >
+                        🗑
+                      </span>
+                    ) : null}
                   </div>
 
                   <div
