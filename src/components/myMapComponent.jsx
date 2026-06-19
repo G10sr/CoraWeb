@@ -4,7 +4,6 @@ import { useLocation, useNavigate } from "react-router-dom";
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap, useMapEvents, Circle, CircleMarker, Pane } from 'react-leaflet';
-import { supabase } from '../lib/supabaseClient';
 
 // AgenteCora: analisis de riesgo del formulario
 import { analyzeReport } from '../agent/agenteCora';
@@ -225,23 +224,9 @@ useEffect(() => {
     }
 
     useEffect(() => {
+        // Load reportes on mount. Realtime subscriptions removed — backend will
+        // be the authority for updates or we can poll if needed.
         cargarReportes();
-
-        const channel = supabase
-            .channel('reportes-realtime')
-            .on(
-                'postgres_changes',
-                { event: '*', schema: 'public', table: 'reportes' },
-                (payload) => {
-                    console.log('Supabase realtime reportes:', payload);
-                    cargarReportes();
-                }
-            )
-            .subscribe();
-
-        return () => {
-            supabase.removeChannel(channel);
-        };
     }, []);
 
     const activateLocation = () => {
