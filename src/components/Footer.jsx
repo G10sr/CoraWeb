@@ -17,7 +17,7 @@ const Footer = ({ style }) => {
           <span className="footer-icon"><img src={ArchiveIcon} /></span>
           <span className="footer-label">Archivero</span>
         </a>
-        <a className="footer-item" href="#">
+        <a className="footer-item" href="/informativa">
           <span className="footer-icon"><img src={WebIcon} /></span>
           <span className="footer-label">Web informativa</span>
         </a>

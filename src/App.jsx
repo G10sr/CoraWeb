@@ -11,6 +11,7 @@ import Agente from "./components/AgenteCoraChat"
 import NotFound from "./pages/NotFound";
 import Login from './pages/Login';
 import CoraTour from "./components/CoraTour";
+import Informativa from "./pages/Informativa";
 
 function Layout() {
   const location = useLocation();
@@ -29,6 +30,7 @@ function Layout() {
         <Route path="/archivero" element={<ArchiveroPage />} />
         <Route path="/perfil" element={<Perfil />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/informativa" element={<Informativa />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
 
