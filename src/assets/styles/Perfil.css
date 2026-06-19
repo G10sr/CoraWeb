@@ -1,20 +1,20 @@
 body {
   margin: 0;
   font-family: "Segoe UI", sans-serif;
-  background-color: #dcdcd2;
+  background-color: white;
 }
 
 .profile-container {
   height: 100vh;
   margin: auto;
-  background-color: #dcdcd2;
+  background-color: white;
   overflow-y: auto;
 }
 
 /* HEADER */
 .header {
   position: relative;
-  background-color: #6b6b6b;
+  background-color: #FFFDEA;
   height: 180px;
   border-bottom-left-radius: 20px;
   border-bottom-right-radius: 20px;
@@ -46,7 +46,7 @@ body {
 }
 
 .stats div {
-  background-color: #9fc3a7;
+  background-color: #A7BD8A;
   padding: 8px 12px;
   border-radius: 20px;
   text-align: center;
@@ -100,7 +100,7 @@ p {
   border: 2px solid #a8b7b3;
   border-radius: 10px;
   position: relative;
-  background-color: transparent;
+  background-color: #fffffd;
   height: 44vh;
   min-height: 280px;
   max-height: 450px;
@@ -118,7 +118,7 @@ p {
   right: 5px;
   display: flex;
   gap: 6px;
-  background-color: #cfcfcf;
+  background-color: #FFFDEA;
   padding: 2px 6px;
   border-radius: 5px;
   font-size: 12px;
@@ -151,7 +151,7 @@ p {
   display: block;
 }
 .verification-status {
-  background-color: #4caf50;
+  background-color: #00978D;
   color: white;
   padding: 4px 8px;
   border-radius: 5px;
@@ -197,7 +197,7 @@ p {
   justify-content: center;
   align-content: center;
   margin-left: auto;
-  background-color: #9acd95;
+  background-color: #A7BD8A;
   padding: 2px 6px;
   border-radius: 5px;
   padding: 7px;

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { answerQuestion, CONVERSATION_STARTERS } from "../agent/agenteCora";
-import coraLogo from "../assets/img/CoraLogo.png";
+import coraLogo from "../assets/img/Cora-Agent.png";
 import "../assets/styles/AgenteCora.css";
 
 const WELCOME = {

@@ -19,13 +19,13 @@ function MiniMap({ position }) {
   if (!position) return null;
 
   const handleClick = () => {
-  navigate("/", {
-    state: {
-      focus: position,
-      skipLocationFly: true
-    }
-  });
-};
+    navigate("/", {
+      state: {
+        focus: position,
+        skipLocationFly: true
+      }
+    });
+  };
 
   return (
     <div
@@ -187,22 +187,22 @@ function Profile() {
           />
         </div>
         <button
-  onClick={() => {
-    localStorage.clear(); // borra todo
-    navigate("/login");   // opcional: redirigir
-  }}
-  style={{
-    margin: "10px",
-    padding: "8px 12px",
-    background: "red",
-    color: "white",
-    border: "none",
-    borderRadius: "6px",
-    cursor: "pointer",
-  }}
->
-  🧹 Borrar localStorage (debug)
-</button>
+          onClick={() => {
+            localStorage.clear(); // borra todo
+            navigate("/login");   // opcional: redirigir
+          }}
+          style={{
+            margin: "10px",
+            padding: "8px 12px",
+            background: "red",
+            color: "white",
+            border: "none",
+            borderRadius: "6px",
+            cursor: "pointer",
+          }}
+        >
+          🧹 Borrar localStorage (debug)
+        </button>
 
         <div className="stats">
           <div>
@@ -217,16 +217,20 @@ function Profile() {
       </div>
 
       <div className="content">
-<h1 className="nature-title">
-  {perfil ? perfil.nombre : "Cargando..."}
+        <h1 className="nature-title">
+          {perfil ? perfil.nombre : "Cargando..."}
 
-  {USER_ROL === 2 && (
-    <img src={CertificateIcon} id="cora-logo-admin" alt="Logo rol 2" />
-  )}
-</h1>
+          {USER_ROL === 2 && (
+            <img src={CertificateIcon} id="cora-logo-admin" alt="Logo rol 2" />
+          )}
+        </h1>
         <section>
           <h2 className="aboutme">Sobre Mí</h2>
-          <p>{perfil ? perfil.aboutme : "Cargando..."}</p>
+          <p>
+            {!perfil
+              ? "Cargando..."
+              : perfil.aboutme || "No hay descripción disponible"}
+          </p>
         </section>
 
         <section>
@@ -299,7 +303,7 @@ function Profile() {
           </div>
         </section>
       </div>
-      
+
     </div>
   );
 };
