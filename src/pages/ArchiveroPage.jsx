@@ -28,21 +28,28 @@ const hashStringToIndex = (value, modulo) => {
   return hash % modulo;
 };
 
-const commentsStorageKey = (pointId) => `archiveroComments_${pointId}`;
-
-const loadComments = (pointId) => {
+// Comentarios ahora se persisten en el backend (tabla comentarios)
+const fetchCommentsFromApi = async (pointId) => {
   try {
-    const raw = localStorage.getItem(commentsStorageKey(pointId));
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
+    const res = await fetch(`http://localhost:3000/api/reportes/${pointId}/comentarios`);
+    if (!res.ok) {
+      const text = await res.text();
+      console.error('fetchComments non-ok response:', res.status, text);
+      return [];
+    }
+
+    const data = await res.json();
+    if (!data.ok) return [];
+    return data.comentarios.map((c) => ({
+      id: c.id,
+      author: c.usuario_nombre || 'Anonimo',
+      text: c.comentario,
+      createdAt: c.fecha_creacion,
+    }));
+  } catch (err) {
+    console.error('Error fetching comments:', err);
     return [];
   }
-};
-
-const saveComments = (pointId, comments) => {
-  localStorage.setItem(commentsStorageKey(pointId), JSON.stringify(comments));
 };
 
 const carouselSections = ["Principal", "Puntos frecuentes", "Agregados recientemente"];
@@ -89,7 +96,7 @@ function formatReporte(reporte) {
 function PointDetailModal({ point, onClose }) {
   const [commentAuthor, setCommentAuthor] = useState("");
   const [commentText, setCommentText] = useState("");
-  const [comments, setComments] = useState(() => loadComments(point.id));
+  const [comments, setComments] = useState([]);
   const USER_ID = JSON.parse(localStorage.getItem("user")).id;
   const USER_ROL = JSON.parse(localStorage.getItem("user")).rol;
 
@@ -99,11 +106,18 @@ function PointDetailModal({ point, onClose }) {
     };
     document.body.style.overflow = "hidden";
     window.addEventListener("keydown", handleKeyDown);
+
+    // cargar comentarios desde backend
+    (async () => {
+      const loaded = await fetchCommentsFromApi(point.id);
+      setComments(loaded);
+    })();
+
     return () => {
       document.body.style.overflow = "";
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [onClose]);
+  }, [onClose, point.id]);
 
   const handleSubmitComment = (event) => {
     event.preventDefault();
@@ -111,16 +125,36 @@ function PointDetailModal({ point, onClose }) {
     const author = commentAuthor.trim() || "Anonimo";
     if (!text) return;
 
-    const newComment = {
-      id: Date.now(),
-      author,
-      text,
-      createdAt: new Date().toISOString(),
-    };
-    const updated = [newComment, ...comments];
-    setComments(updated);
-    saveComments(point.id, updated);
-    setCommentText("");
+    (async () => {
+      try {
+        const res = await fetch(`http://localhost:3000/api/reportes/${point.id}/comentarios`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ usuarioId: USER_ID, comentario: text }),
+        });
+        if (!res.ok) {
+          const txt = await res.text();
+          throw new Error(`HTTP ${res.status}: ${txt}`);
+        }
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.message || 'Error creando comentario');
+
+        const created = data.comentario;
+        const newComment = {
+          id: created.id,
+          author: created.usuario_nombre || author,
+          text: created.comentario,
+          createdAt: created.fecha_creacion,
+        };
+
+        setComments((c) => [newComment, ...c]);
+        setCommentText("");
+        setCommentAuthor("");
+      } catch (err) {
+        console.error('Error creando comentario:', err);
+        alert('No se pudo publicar el comentario');
+      }
+    })();
   };
 
   return (
