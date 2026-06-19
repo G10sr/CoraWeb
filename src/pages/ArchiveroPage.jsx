@@ -8,6 +8,7 @@ import basura2 from "../assets/img/basura2.jpg";
 import basura3 from "../assets/img/basura3.webp";
 import { analyzeReport } from "../agent/agenteCora";
 import "../assets/styles/AgenteCora.css";
+import { supabase } from "../lib/supabaseClient";
 
 const imagePool = [basura1, basura2, basura3];
 const allowedRegions = ["Colegio CTP CIT", "Soda armonia"];
@@ -55,6 +56,35 @@ const getItemsPerView = () => {
   }
   return 3;
 };
+
+function formatReporte(reporte) {
+  const region = allowedRegions.includes(reporte.region_name)
+    ? reporte.region_name
+    : "Colegio CTP CIT";
+
+  const name = reporte.reportado_por ? `Reporte de ${reporte.reportado_por}` : "Reporte sin nombre";
+  const createdAt = reporte.fecha_creacion ? new Date(reporte.fecha_creacion).getTime() : null;
+
+  const point = {
+    id: reporte.id,
+    name,
+    region,
+    image: imagePool[hashStringToIndex(reporte.id, imagePool.length)],
+    wasteType: reporte.tipo_residuo,
+    verified: reporte.verificado || false,
+    amount: reporte.cantidad,
+    slope: reporte.pendiente,
+    waterProximity: reporte.cercania_agua,
+    riskLevel: reporte.riesgo_contaminacion,
+    materialType: reporte.clasificacion_material,
+    position: reporte.latitud != null && reporte.longitud != null ? [reporte.latitud, reporte.longitud] : null,
+    createdAt,
+  };
+
+  point.description = defaultDescription(point.name, region, point.verified);
+  point.analysis = analyzeReport(point);
+  return point;
+}
 
 function PointDetailModal({ point, onClose }) {
   const [commentAuthor, setCommentAuthor] = useState("");
@@ -277,6 +307,38 @@ function ArchiveroPage() {
     };
 
     cargarPuntos();
+
+    const channel = supabase
+      .channel('reportes-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'reportes' }, (payload) => {
+        console.debug('ArchiveroPage realtime payload:', payload);
+        const eventType = payload.eventType || payload.event || payload.type;
+        const reporte = payload.record || payload.new || null;
+        const oldReporte = payload.old_record || payload.old || null;
+
+        if (eventType === 'INSERT' && reporte?.id) {
+          setFirebasePoints((current) => {
+            const nuevo = formatReporte(reporte);
+            return [nuevo, ...current.filter((item) => item.id !== nuevo.id)];
+          });
+        }
+        if (eventType === 'UPDATE' && reporte?.id) {
+          setFirebasePoints((current) =>
+            current.map((item) => (item.id === reporte.id ? formatReporte(reporte) : item))
+          );
+        }
+        if (eventType === 'DELETE' && oldReporte?.id) {
+          setFirebasePoints((current) => current.filter((item) => item.id !== oldReporte.id));
+        }
+      });
+
+    channel.subscribe((status) => console.debug('ArchiveroPage realtime status:', status));
+
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
   }, []);
 
   const mergedPoints = firebasePoints;

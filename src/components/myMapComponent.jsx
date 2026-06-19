@@ -5,6 +5,8 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap, useMapEvents, Circle, CircleMarker, Pane } from 'react-leaflet';
 
+import { supabase } from '../lib/supabaseClient';
+
 // AgenteCora: analisis de riesgo del formulario
 import { analyzeReport } from '../agent/agenteCora';
 import '../assets/styles/AgenteCora.css';
@@ -24,6 +26,27 @@ function RiskCard({ analysis }) {
             </div>
         </div>
     );
+}
+
+function mapReporteToMarker(reporte) {
+    return {
+        id: reporte.id,
+        position: [reporte.latitud, reporte.longitud],
+        name: reporte.reportado_por ? String(reporte.reportado_por) : 'Anónimo',
+        region: reporte.region_name || 'Sin región',
+        verified: reporte.verificado || false,
+        wasteType: reporte.tipo_residuo,
+        amount: reporte.cantidad,
+        slope: reporte.pendiente,
+        waterProximity: reporte.cercania_agua,
+        riskLevel: reporte.riesgo_contaminacion,
+        materialType: reporte.clasificacion_material,
+        timestamp: reporte.fecha_creacion ? new Date(reporte.fecha_creacion).toLocaleTimeString() : new Date().toLocaleTimeString(),
+    };
+}
+
+function getRealtimeReportPayload(payload) {
+    return payload?.new ?? payload?.record ?? payload?.payload?.new ?? payload;
 }
 
 // Importación de activos para los marcadores
@@ -224,9 +247,37 @@ useEffect(() => {
     }
 
     useEffect(() => {
-        // Load reportes on mount. Realtime subscriptions removed — backend will
-        // be the authority for updates or we can poll if needed.
         cargarReportes();
+
+        const channel = supabase
+            .channel('reportes-realtime')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'reportes' }, (payload) => {
+                console.debug('Realtime reportes payload:', payload);
+                const eventType = payload.eventType || payload.event || payload.type;
+                const registro = payload.record || payload.new || null;
+                const oldRegistro = payload.old_record || payload.old || null;
+
+                if (eventType === 'INSERT' && registro?.id) {
+                    setCustomMarkers((current) => {
+                        const nuevo = mapReporteToMarker(registro);
+                        return [nuevo, ...current.filter((item) => item.id !== registro.id)];
+                    });
+                }
+                if (eventType === 'UPDATE' && registro?.id) {
+                    setCustomMarkers((current) => current.map((item) => (item.id === registro.id ? mapReporteToMarker(registro) : item)));
+                }
+                if (eventType === 'DELETE' && oldRegistro?.id) {
+                    setCustomMarkers((current) => current.filter((item) => item.id !== oldRegistro.id));
+                }
+            });
+
+        channel.subscribe((status) => console.debug('MyMapComponent realtime status:', status));
+
+        return () => {
+            if (channel) {
+                supabase.removeChannel(channel);
+            }
+        };
     }, []);
 
     const activateLocation = () => {
