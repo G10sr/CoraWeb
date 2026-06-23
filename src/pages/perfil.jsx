@@ -261,7 +261,6 @@ const [showEditModal, setShowEditModal] = useState(false);
       </div>
 
       <div className="content">
-<<<<<<< HEAD
         <h1 className="nature-title">
           {perfil ? perfil.nombre : "Cargando..."}
 
@@ -269,14 +268,6 @@ const [showEditModal, setShowEditModal] = useState(false);
             <img src={CertificateIcon} id="cora-logo-admin" alt="Logo rol 2" />
           )}
         </h1>
-=======
-        <h1 className="nature-title">{perfil ? perfil.nombre : "Cargando..."}
-
-            {USER_ROL === 2 && (
-              <img src={CertificateIcon} id="cora-logo-admin" alt="Logo rol 2" />
-            )}
-          </h1>
->>>>>>> fc22940 (feat: implement profile update API and add profile editing modal)
         <section>
           <h2 className="aboutme">Sobre Mí</h2>
           <p>
