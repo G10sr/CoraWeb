@@ -258,3 +258,14 @@ p {
   width: 24px;
   filter:invert(1) drop-shadow(0 0 2px rgba(0, 42, 255, 0.8));
 }
+.edit-profile-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 8px 12px;
+  background-color: #2b8a3e;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}

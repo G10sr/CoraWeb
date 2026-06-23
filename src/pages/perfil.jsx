@@ -3,6 +3,7 @@ import "../assets/styles/Perfil.css";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useEffect, useState } from "react";
+import ProfileEditModal from "../components/ProfileEditModal";
 import usr_img from "../assets/img/usr_unk.jpeg";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -60,8 +61,11 @@ function Profile() {
 
   const [posts, setPosts] = useState([]);
   const [perfil, setPerfil] = useState(null);
+  const [nombre, setNombre] = useState("");
+  const [aboutme, setAboutme] = useState("");
   const [BannerImage, setBannerImage] = useState("");
-
+const [editando, setEditando] = useState(false);
+const [showEditModal, setShowEditModal] = useState(false);
   useEffect(() => {
     cargarPerfil();
   }, []);
@@ -102,6 +106,7 @@ function Profile() {
       alert("Error al eliminar el reporte: " + error.message);
     }
   };
+
   async function cargarPerfil() {
     try {
       const response = await fetch(
@@ -122,9 +127,43 @@ function Profile() {
       console.log("Perfil cargado:", data);
 
       setPerfil(data.perfil);
-
+      setNombre(data.perfil.nombre);
+      setAboutme(data.perfil.aboutme || "");
     } catch (error) {
       console.error(error);
+    }
+  }
+  async function guardarPerfil(perfil_img, newNombre, newAbout) {
+    try {
+      const payload = {
+        id: USER_ID,
+        nombre: newNombre ?? nombre,
+        aboutme: newAbout ?? aboutme,
+      };
+
+      if (perfil_img) payload.perfil_img = perfil_img;
+
+      const response = await fetch(
+        "http://localhost:3000/api/perfil",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.ok) {
+        setEditando(false);
+        cargarPerfil();
+        alert("Perfil actualizado");
+      }
+    }
+    catch (err) {
+      console.error(err);
     }
   }
 
@@ -186,10 +225,15 @@ function Profile() {
             alt="Avatar"
           />
         </div>
+        <button className="edit-profile-btn"
+          onClick={() => setShowEditModal(true)}
+        >
+          Editar perfil
+        </button>
         <button
           onClick={() => {
-            localStorage.clear(); // borra todo
-            navigate("/login");   // opcional: redirigir
+            localStorage.clear(); 
+            navigate("/login");   
           }}
           style={{
             margin: "10px",
@@ -217,6 +261,7 @@ function Profile() {
       </div>
 
       <div className="content">
+<<<<<<< HEAD
         <h1 className="nature-title">
           {perfil ? perfil.nombre : "Cargando..."}
 
@@ -224,6 +269,14 @@ function Profile() {
             <img src={CertificateIcon} id="cora-logo-admin" alt="Logo rol 2" />
           )}
         </h1>
+=======
+        <h1 className="nature-title">{perfil ? perfil.nombre : "Cargando..."}
+
+            {USER_ROL === 2 && (
+              <img src={CertificateIcon} id="cora-logo-admin" alt="Logo rol 2" />
+            )}
+          </h1>
+>>>>>>> fc22940 (feat: implement profile update API and add profile editing modal)
         <section>
           <h2 className="aboutme">Sobre Mí</h2>
           <p>
@@ -233,6 +286,20 @@ function Profile() {
           </p>
         </section>
 
+        <ProfileEditModal
+          open={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          initialName={nombre}
+          initialAbout={aboutme}
+          initialImage={perfil?.perfil_img}
+          onSave={(newName, newAbout, newImg) => {
+            guardarPerfil(newImg, newName, newAbout).then(() => {
+              setNombre(newName);
+              setAboutme(newAbout);
+            });
+            setShowEditModal(false);
+          }}
+        />
         <section>
           <h2 className="nature-title">Publicados</h2>
           <div className="posts-grid">

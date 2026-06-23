@@ -113,6 +113,39 @@ app.post("/api/load-perfil", async (req, res) => {
 });
 
 // =====================================================
+// ACTUALIZAR PERFIL (nombre, aboutme, perfil_img)
+// =====================================================
+
+app.put("/api/perfil", async (req, res) => {
+  try {
+    const { id, nombre, aboutme, perfil_img } = req.body;
+
+    if (!id) {
+      return res.status(400).json({ ok: false, message: "ID de usuario requerido" });
+    }
+
+    const updated = await sql`
+      UPDATE usuarios
+      SET
+        nombre = COALESCE(${nombre}, nombre),
+        aboutme = COALESCE(${aboutme}, aboutme),
+        perfil_img = COALESCE(${perfil_img}, perfil_img)
+      WHERE id = ${id}
+      RETURNING *
+    `;
+
+    if (updated.length === 0) {
+      return res.status(404).json({ ok: false, message: "Usuario no encontrado" });
+    }
+
+    return res.status(200).json({ ok: true, perfil: updated[0] });
+  } catch (err) {
+    console.error("Error actualizando perfil:", err);
+    return res.status(500).json({ ok: false, message: "Error interno del servidor" });
+  }
+});
+
+// =====================================================
 // AGREGAR PUNTO
 // =====================================================
 
