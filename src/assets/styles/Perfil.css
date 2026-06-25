@@ -101,9 +101,9 @@ p {
   border-radius: 10px;
   position: relative;
   background-color: #fffffd;
-  height: 44vh;
-  min-height: 280px;
-  max-height: 450px;
+  height: 47vh;
+  min-height: 300px;
+  max-height: 500px;
   overflow: auto;
   overflow-x: hidden;
   padding-inline: 12px;
@@ -165,7 +165,7 @@ p {
 }
 
 .mini-map-wrapper {
-  height: 120px;
+  height: 80px;
   width: 100%;
   overflow: hidden;
   border-radius: 10px;
