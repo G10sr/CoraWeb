@@ -42,9 +42,7 @@ async function getDailyImage() {
   dailyImage = result.photos[0].src.large2x;
   dailyDate = today;
 
-  console.log(`[PEXELS] Nueva imagen diaria cargada: ${today}`);
-
-  return dailyImage;
+    return dailyImage;
 }
 
 // =====================================================
@@ -60,8 +58,6 @@ app.get("/api/nature-image", async (req, res) => {
       image,
     });
   } catch (err) {
-    console.error("PEXELS ERROR:", err);
-
     return res.status(500).json({
       ok: false,
       message: "Error obteniendo imagen",
@@ -103,8 +99,6 @@ app.post("/api/load-perfil", async (req, res) => {
       perfil: usuario[0],
     });
   } catch (err) {
-    console.error("Error interno:", err);
-
     return res.status(500).json({
       ok: false,
       message: "Error interno del servidor",
@@ -140,7 +134,6 @@ app.put("/api/perfil", async (req, res) => {
 
     return res.status(200).json({ ok: true, perfil: updated[0] });
   } catch (err) {
-    console.error("Error actualizando perfil:", err);
     return res.status(500).json({ ok: false, message: "Error interno del servidor" });
   }
 });
@@ -180,8 +173,6 @@ app.post("/api/agregar-punto", async (req, res) => {
       message: "Punto agregado correctamente",
     });
   } catch (err) {
-    console.error("Error interno:", err);
-
     return res.status(500).json({
       ok: false,
       message: "Error interno del servidor",
@@ -221,8 +212,6 @@ app.post("/api/login", async (req, res) => {
       rol: usuario[0].rol_id
     });
   } catch (err) {
-    console.error("Error interno:", err);
-
     return res.status(500).json({
       ok: false,
       message: "Error interno del servidor",
@@ -234,8 +223,10 @@ app.post("/api/login", async (req, res) => {
 
 app.get("/api/reportes", async (req, res) => {
   try {
-
-    const { usuarioId } = req.query;
+    const { usuarioId, page = 1, limit = 50 } = req.query;
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.min(100, Math.max(10, parseInt(limit) || 50));
+    const offset = (pageNum - 1) * limitNum;
 
     const reportesRaw = await sql`
       SELECT
@@ -262,7 +253,15 @@ app.get("/api/reportes", async (req, res) => {
         ON reg.id = r.region_id
       ${usuarioId ? sql`WHERE r.reportado_por = ${usuarioId}` : sql``}
       ORDER BY r.fecha_creacion DESC
+      LIMIT ${limitNum} OFFSET ${offset}
     `;
+
+    const countResult = await sql`
+      SELECT COUNT(*) as total
+      FROM reportes r
+      ${usuarioId ? sql`WHERE r.reportado_por = ${usuarioId}` : sql``}
+    `;
+    const total = countResult[0]?.total || 0;
 
     const reportes = reportesRaw.map((reporte) => ({
       id: reporte.id,
@@ -282,14 +281,20 @@ app.get("/api/reportes", async (req, res) => {
       region_name: reporte.region_name,
     }));
 
+    const totalPages = Math.ceil(total / limitNum);
     return res.json({
       ok: true,
       reportes,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        pages: totalPages,
+        hasMore: pageNum < totalPages,
+      },
     });
 
   } catch (error) {
-    console.error("GET /api/reportes error:", error);
-
     return res.status(500).json({
       ok: false,
       message: error.message,
@@ -382,7 +387,6 @@ app.post("/api/reportes", async (req, res) => {
       reporte: nuevoReporte[0],
     });
   } catch (error) {
-    console.error("Error interno:", error);
     return res.status(500).json({
       ok: false,
       message: "Error interno del servidor",
@@ -524,5 +528,4 @@ app.post('/api/reportes/:id/comentarios', async (req, res) => {
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log(`Servidor corriendo en puerto ${PORT}`);
 });

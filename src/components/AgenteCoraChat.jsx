@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback, memo } from "react";
 import { answerQuestion, CONVERSATION_STARTERS } from "../agent/agenteCora";
 import coraLogo from "../assets/img/Cora-Agent.png";
 import "../assets/styles/AgenteCora.css";
@@ -105,4 +105,4 @@ function AgenteCoraChat() {
   );
 }
 
-export default AgenteCoraChat;
+export default memo(AgenteCoraChat);

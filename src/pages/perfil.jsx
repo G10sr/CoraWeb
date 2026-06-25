@@ -4,6 +4,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useEffect, useState } from "react";
 import ProfileEditModal from "../components/ProfileEditModal";
+import CoraFeedbackModal from "../components/CoraFeedbackModal";
 import usr_img from "../assets/img/usr_unk.jpeg";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -58,6 +59,9 @@ function Profile() {
 
   let verifiedPosts = 0;
 
+  const [feedback, setFeedback] = useState(null);
+  const closeFeedback = () => setFeedback(null);
+  const showFeedback = (payload) => setFeedback(payload);
 
   const [posts, setPosts] = useState([]);
   const [perfil, setPerfil] = useState(null);
@@ -77,12 +81,6 @@ const [showEditModal, setShowEditModal] = useState(false);
   }, []);
 
   const eliminarPost = async (postId) => {
-    const confirmar = window.confirm(
-      "¿Deseas eliminar este reporte?"
-    );
-
-    if (!confirmar) return;
-
     try {
       const response = await fetch(`http://localhost:3000/api/reportes/${postId}`, {
         method: "DELETE",
@@ -100,11 +98,32 @@ const [showEditModal, setShowEditModal] = useState(false);
       }
 
       setPosts((prev) => prev.filter((post) => post.id !== postId));
-      alert("Reporte eliminado correctamente");
+      showFeedback({
+        variant: 'success',
+        title: 'Reporte eliminado',
+        message: 'Reporte eliminado correctamente.',
+        confirmLabel: 'Perfecto'
+      });
     } catch (error) {
       console.error(error);
-      alert("Error al eliminar el reporte: " + error.message);
+      showFeedback({
+        variant: 'error',
+        title: 'Error al eliminar',
+        message: 'Error al eliminar el reporte: ' + error.message,
+        confirmLabel: 'Entendido'
+      });
     }
+  };
+
+  const requestDeletePost = (postId) => {
+    showFeedback({
+      variant: 'confirm',
+      title: 'Eliminar reporte',
+      message: '¿Deseas eliminar este reporte?',
+      confirmLabel: 'Eliminar',
+      cancelLabel: 'Cancelar',
+      onConfirm: () => eliminarPost(postId),
+    });
   };
 
   async function cargarPerfil() {
@@ -159,7 +178,12 @@ const [showEditModal, setShowEditModal] = useState(false);
       if (data.ok) {
         setEditando(false);
         cargarPerfil();
-        alert("Perfil actualizado");
+        showFeedback({
+          variant: 'success',
+          title: 'Perfil actualizado',
+          message: 'Los cambios en tu perfil se guardaron correctamente.',
+          confirmLabel: 'Perfecto'
+        });
       }
     }
     catch (err) {
@@ -347,7 +371,7 @@ const [showEditModal, setShowEditModal] = useState(false);
                     {!post.verified ? (
                       <span
                         style={{ cursor: "pointer" }}
-                        onClick={() => eliminarPost(post.id)}
+                        onClick={() => requestDeletePost(post.id)}
                       >
                         🗑
                       </span>
@@ -376,7 +400,19 @@ const [showEditModal, setShowEditModal] = useState(false);
           </div>
         </section>
       </div>
-
+      {feedback && (
+        <CoraFeedbackModal
+          open={!!feedback}
+          variant={feedback.variant}
+          title={feedback.title}
+          message={feedback.message}
+          confirmLabel={feedback.confirmLabel}
+          cancelLabel={feedback.cancelLabel}
+          onConfirm={feedback.onConfirm}
+          onClose={closeFeedback}
+          loading={feedback.loading || false}
+        />
+      )}
     </div>
   );
 };

@@ -1,11 +1,14 @@
-import MyMapComponent from '../components/myMapComponent'
+import { Suspense, lazy } from 'react';
 
+const MyMapComponent = lazy(() => import('../components/myMapComponent'));
 
 function Home() {
   return (
     <div className="app">
       <div className="map-container">
-        <MyMapComponent />
+        <Suspense fallback={<div style={{ padding: '20px', textAlign: 'center' }}>Cargando mapa...</div>}>
+          <MyMapComponent />
+        </Suspense>
       </div>
     </div>
   )

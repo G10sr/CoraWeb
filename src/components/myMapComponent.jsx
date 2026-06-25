@@ -1,10 +1,10 @@
 // --- IMPORTACIONES ---
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { useLocation, useNavigate } from "react-router-dom";
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap, useMapEvents, Circle, CircleMarker, Pane } from 'react-leaflet';
-
+import CoraFeedbackModal from './CoraFeedbackModal.jsx';
 import { supabase } from '../lib/supabaseClient';
 
 // AgenteCora: analisis de riesgo del formulario
@@ -13,7 +13,7 @@ import '../assets/styles/AgenteCora.css';
 
 
 // Rectangulo de calificacion que AgenteCora coloca junto al punto
-function RiskCard({ analysis }) {
+const RiskCard = memo(({ analysis }) => {
     if (!analysis?.valid) return null;
     return (
         <div className="cora-risk-card" style={{ '--risk-hex': analysis.hex }}>
@@ -26,7 +26,7 @@ function RiskCard({ analysis }) {
             </div>
         </div>
     );
-}
+});
 
 function mapReporteToMarker(reporte) {
     return {
@@ -99,6 +99,9 @@ function FocusMap({ position }) {
 
 // --- COMPONENTE PRINCIPAL ---
 function MyMapComponent() {
+    const [feedback, setFeedback] = useState(null);
+    const closeFeedback = () => setFeedback(null);
+    const showFeedback = (payload) => setFeedback(payload);
     const USER_ID = JSON.parse(localStorage.getItem("user")).id;
     const location = useLocation();
     const navigate = useNavigate();
@@ -241,15 +244,9 @@ function MyMapComponent() {
             );
 
             const data = await response.json();
-
-            console.log("Respuesta completa:", data);
-            console.log("Perfil:", data.perfil);
-            console.log("Nombre:", data.perfil?.nombre);
-
             setPerfil(data.perfil);
 
         } catch (error) {
-            console.error(error);
         }
     }
     const [tempMarker, setTempMarker] = useState(null);
@@ -294,7 +291,6 @@ function MyMapComponent() {
                     region: prev.region || opciones[0] || ''
                 }));
             } catch (error) {
-                console.error("Error al cargar regiones:", error);
             }
         };
         cargarRegiones();
@@ -318,7 +314,12 @@ function MyMapComponent() {
                     ]);
                 },
                 (error) => {
-                    console.error(error);
+                    showFeedback({
+                        variant: 'error',
+                        title: 'Ubicación',
+                        message: 'Error al obtener ubicación: ' + error.message,
+                        confirmLabel: 'Entendido'
+                    });
                 },
                 { enableHighAccuracy: true }
             );
@@ -350,10 +351,8 @@ function MyMapComponent() {
                 timestamp: reporte.fecha_creacion ? new Date(reporte.fecha_creacion).toLocaleTimeString() : new Date().toLocaleTimeString()
             }));
 
-            console.log("Reportes cargados:", puntos.length, puntos);
             setCustomMarkers(puntos);
         } catch (error) {
-            console.error("Error al cargar reportes:", error);
         }
     }
 
@@ -363,7 +362,6 @@ function MyMapComponent() {
         const channel = supabase
             .channel('reportes-realtime')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'reportes' }, (payload) => {
-                console.debug('Realtime reportes payload:', payload);
                 const eventType = payload.eventType || payload.event || payload.type;
                 const registro = payload.record || payload.new || null;
                 const oldRegistro = payload.old_record || payload.old || null;
@@ -382,7 +380,7 @@ function MyMapComponent() {
                 }
             });
 
-        channel.subscribe((status) => console.debug('MyMapComponent realtime status:', status));
+        channel.subscribe();
 
         return () => {
             if (channel) {
@@ -395,7 +393,12 @@ function MyMapComponent() {
         if ("geolocation" in navigator) {
             navigator.geolocation.getCurrentPosition(
                 (pos) => setUserPosition([pos.coords.latitude, pos.coords.longitude]),
-                (error) => alert("Error al obtener ubicación: " + error.message),
+                (error) => showFeedback({
+                    variant: 'error',
+                    title: 'Ubicación no disponible',
+                    message: 'Error al obtener ubicación: ' + error.message,
+                    confirmLabel: 'Entendido'
+                }),
                 { enableHighAccuracy: true }
             );
         }
@@ -442,7 +445,12 @@ function MyMapComponent() {
                     localStorage.setItem("locationEnabled", "true");
                 },
                 (error) => {
-                    alert("Error al obtener ubicación: " + error.message);
+                    showFeedback({
+                        variant: 'error',
+                        title: 'Ubicación',
+                        message: 'Error al obtener ubicación: ' + error.message,
+                        confirmLabel: 'Entendido'
+                    });
                 },
                 { enableHighAccuracy: true }
             );
@@ -451,12 +459,22 @@ function MyMapComponent() {
     const handleFormSubmit = async (e) => {
         e.preventDefault();
         if (!formData.amount) {
-            alert("Por favor completa los campos obligatorios antes de guardar.");
+            showFeedback({
+                variant: 'warning',
+                title: 'Faltan campos',
+                message: 'Por favor completa los campos obligatorios antes de guardar.',
+                confirmLabel: 'Entendido'
+            });
             return;
         }
 
         if (images.length > MAX_IMAGES) {
-            alert(`Solo puedes subir hasta ${MAX_IMAGES} imágenes.`);
+            showFeedback({
+                variant: 'warning',
+                title: 'Límite de imágenes',
+                message: `Solo puedes subir hasta ${MAX_IMAGES} imágenes.`,
+                confirmLabel: 'Entendido'
+            });
             return;
         }
 
@@ -492,14 +510,23 @@ function MyMapComponent() {
             await cargarPerfil();
             await cargarReportes();
 
-            alert("Punto registrado correctamente");
+            showFeedback({
+                variant: 'success',
+                title: 'Reporte guardado',
+                message: 'Punto registrado correctamente.',
+                confirmLabel: 'Perfecto'
+            });
             setTempMarker(null);
             setImages([]);
             setImageError('');
 
         } catch (error) {
-            console.error("Error al guardar el reporte:", error);
-            alert("Hubo un error al guardar el reporte. " + error.message);
+            showFeedback({
+                variant: 'error',
+                title: 'Error',
+                message: 'Hubo un error al guardar el reporte. ' + error.message,
+                confirmLabel: 'Entendido'
+            });
         } finally {
             setCargando(false);
         }
@@ -589,7 +616,7 @@ function MyMapComponent() {
                 {/* Marcador temporal con el Formulario */}
                 {tempMarker && (
                     <Marker position={tempMarker.position}>
-<Popup onClose={() => { setTempMarker(null); setImages([]); setImageError(''); }}>
+                        <Popup onClose={() => { setTempMarker(null); setImages([]); setImageError(''); }}>
 
                             <form onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '200px' }}>
                                 <strong style={{ textAlign: 'center', borderBottom: '1px solid #eee', paddingBottom: '5px' }}>Detalles del Reporte</strong>
@@ -784,7 +811,20 @@ function MyMapComponent() {
                         </Marker>
                     );
                 })}
-            </MapContainer>
+                </MapContainer>
+            {feedback && (
+                <CoraFeedbackModal
+                    open={!!feedback}
+                    variant={feedback.variant}
+                    title={feedback.title}
+                    message={feedback.message}
+                    confirmLabel={feedback.confirmLabel}
+                    cancelLabel={feedback.cancelLabel}
+                    onConfirm={feedback.onConfirm}
+                    loading={feedback.loading || false}
+                    onClose={closeFeedback}
+                />
+            )}
         </div>
     );
 }

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import CoraFeedbackModal from "../components/CoraFeedbackModal";
 import "../assets/styles/ArchiveroPage.css";
 import basura1 from "../assets/img/basura1.jpg";
 import basura2 from "../assets/img/basura2.jpg";
@@ -100,6 +101,9 @@ function PointDetailModal({ point, onClose }) {
   const [commentText, setCommentText] = useState("");
   const [comments, setComments] = useState([]);
   const [perfil, setPerfil] = useState(null);
+  const [feedback, setFeedback] = useState(null);
+  const closeFeedback = () => setFeedback(null);
+  const showFeedback = (payload) => setFeedback(payload);
   const USER_ID = JSON.parse(localStorage.getItem("user")).id;
   const USER_ROL = JSON.parse(localStorage.getItem("user")).rol;
 
@@ -126,7 +130,6 @@ function PointDetailModal({ point, onClose }) {
           setCommentAuthor(data.perfil.nombre || "");
         }
       } catch (error) {
-        console.error(error);
       }
     };
 
@@ -184,7 +187,12 @@ function PointDetailModal({ point, onClose }) {
         setCommentText("");
       } catch (err) {
         console.error('Error creando comentario:', err);
-        alert('No se pudo publicar el comentario');
+        showFeedback({
+          variant: 'error',
+          title: 'Error al comentar',
+          message: 'No se pudo publicar el comentario',
+          confirmLabel: 'Entendido'
+        });
       }
     })();
   };
@@ -372,10 +380,14 @@ function ArchiveroPage() {
             id: reporte.id,
             name,
             region,
-    imagenes: reporte.imagenes || [],
-    image: (reporte.imagenes && reporte.imagenes.length > 0)
-      ? reporte.imagenes[0]
-      : imagePool[hashStringToIndex(reporte.id, imagePool.length)],
+            imagenes: reporte.imagenes || [],
+            image: (reporte.imagenes && reporte.imagenes.length > 0)
+              ? reporte.imagenes[0]
+              : imagePool[hashStringToIndex(reporte.id, imagePool.length)],
+            wasteType: reporte.tipo_residuo,
+            verified: reporte.verificado || false,
+            amount: reporte.cantidad,
+            slope: reporte.pendiente,
             waterProximity: reporte.cercania_agua,
             riskLevel: reporte.riesgo_contaminacion,
             materialType: reporte.clasificacion_material,
@@ -391,7 +403,6 @@ function ArchiveroPage() {
         puntos.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
         setFirebasePoints(puntos);
       } catch (error) {
-        console.error("Error al cargar puntos del backend:", error);
       }
     };
 
@@ -400,7 +411,6 @@ function ArchiveroPage() {
     const channel = supabase
       .channel('reportes-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'reportes' }, (payload) => {
-        console.debug('ArchiveroPage realtime payload:', payload);
         const eventType = payload.eventType || payload.event || payload.type;
         const reporte = payload.record || payload.new || null;
         const oldReporte = payload.old_record || payload.old || null;
@@ -421,7 +431,7 @@ function ArchiveroPage() {
         }
       });
 
-    channel.subscribe((status) => console.debug('ArchiveroPage realtime status:', status));
+    channel.subscribe();
 
     return () => {
       if (channel) {
