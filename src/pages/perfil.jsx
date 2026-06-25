@@ -196,6 +196,7 @@ const [showEditModal, setShowEditModal] = useState(false);
         waterProximity: reporte.cercania_agua,
         riskLevel: reporte.riesgo_contaminacion,
         materialType: reporte.clasificacion_material,
+        imagenes: reporte.imagenes || [],
         timestamp: reporte.fecha_creacion
           ? new Date(reporte.fecha_creacion).toLocaleTimeString()
           : new Date().toLocaleTimeString(),
@@ -308,6 +309,19 @@ const [showEditModal, setShowEditModal] = useState(false);
                   <div className="mini-map-wrapper">
                     <MiniMap position={post.position} />
                   </div>
+
+                  {post.imagenes && post.imagenes.length > 0 && (
+                    <div className="post-images-grid">
+                      {post.imagenes.slice(0, 3).map((src, idx) => (
+                        <img
+                          key={idx}
+                          src={src}
+                          alt={`Imagen reporte ${post.id} ${idx + 1}`}
+                          className="post-image-preview"
+                        />
+                      ))}
+                    </div>
+                  )}
 
                   <div className="post-info">
                     <h3 className="post-title">

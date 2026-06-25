@@ -42,6 +42,7 @@ function mapReporteToMarker(reporte) {
         riskLevel: reporte.riesgo_contaminacion,
         materialType: reporte.clasificacion_material,
         timestamp: reporte.fecha_creacion ? new Date(reporte.fecha_creacion).toLocaleTimeString() : new Date().toLocaleTimeString(),
+        imagenes: reporte.imagenes || [],
     };
 }
 
@@ -110,10 +111,119 @@ function MyMapComponent() {
     const [cargando, setCargando] = useState(false);
     const [regionOptions, setRegionOptions] = useState([]);
     const [perfil, setPerfil] = useState(null);
+    const [images, setImages] = useState([]);
+    const [imageError, setImageError] = useState('');
     const [locationEnabled, setLocationEnabled] = useState(() => {
         return localStorage.getItem("locationEnabled") === "true";
     });
 
+    const MAX_IMAGES = 3;
+    const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2 MB
+
+    const fileToImage = (file) => {
+        return new Promise((resolve, reject) => {
+            const url = URL.createObjectURL(file);
+            const img = new Image();
+            img.onload = () => {
+                URL.revokeObjectURL(url);
+                resolve(img);
+            };
+            img.onerror = (error) => {
+                URL.revokeObjectURL(url);
+                reject(new Error(`No se pudo cargar la imagen ${file.name}`));
+            };
+            img.src = url;
+        });
+    };
+
+    const canvasToBlob = (canvas, type, quality) => {
+        return new Promise((resolve) => {
+            canvas.toBlob(resolve, type, quality);
+        });
+    };
+
+    const compressImageFile = async (file) => {
+        const image = await fileToImage(file);
+        const maxDimension = 1200;
+        let width = image.width;
+        let height = image.height;
+
+        if (width > maxDimension || height > maxDimension) {
+            const ratio = Math.min(maxDimension / width, maxDimension / height);
+            width = Math.round(width * ratio);
+            height = Math.round(height * ratio);
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(image, 0, 0, width, height);
+
+        let quality = 0.85;
+        let blob = await canvasToBlob(canvas, 'image/jpeg', quality);
+
+        while (blob && blob.size > MAX_IMAGE_SIZE && quality > 0.45) {
+            quality -= 0.1;
+            blob = await canvasToBlob(canvas, 'image/jpeg', quality);
+        }
+
+        if (!blob) {
+            throw new Error(`No se pudo comprimir la imagen ${file.name}`);
+        }
+
+        if (blob.size > MAX_IMAGE_SIZE) {
+            throw new Error(`La imagen ${file.name} supera los 2 MB después de la compresión.`);
+        }
+
+        const dataUrl = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = () => reject(reader.error);
+            reader.readAsDataURL(blob);
+        });
+
+        return {
+            name: file.name,
+            dataUrl,
+            size: blob.size,
+            type: 'image/jpeg',
+        };
+    };
+
+    const handleImageSelection = async (event) => {
+        const selectedFiles = Array.from(event.target.files || []);
+        if (selectedFiles.length === 0) {
+            return;
+        }
+
+        if (images.length + selectedFiles.length > MAX_IMAGES) {
+            setImageError(`Solo puedes subir hasta ${MAX_IMAGES} imágenes.`);
+            event.target.value = '';
+            return;
+        }
+
+        try {
+            setImageError('');
+            const compressedFiles = [];
+            for (const file of selectedFiles) {
+                if (!file.type.startsWith('image/')) {
+                    throw new Error(`El archivo ${file.name} no es una imagen válida.`);
+                }
+                compressedFiles.push(await compressImageFile(file));
+            }
+
+            setImages((current) => [...current, ...compressedFiles].slice(0, MAX_IMAGES));
+        } catch (error) {
+            setImageError(error.message || 'Error al procesar las imágenes.');
+        } finally {
+            event.target.value = '';
+        }
+    };
+
+    const removeImage = (index) => {
+        setImages((current) => current.filter((_, idx) => idx !== index));
+    };
 
     async function cargarPerfil() {
         try {
@@ -236,6 +346,7 @@ function MyMapComponent() {
                 waterProximity: reporte.cercania_agua,
                 riskLevel: reporte.riesgo_contaminacion,
                 materialType: reporte.clasificacion_material,
+                imagenes: reporte.imagenes || [],
                 timestamp: reporte.fecha_creacion ? new Date(reporte.fecha_creacion).toLocaleTimeString() : new Date().toLocaleTimeString()
             }));
 
@@ -301,6 +412,8 @@ function MyMapComponent() {
             riskLevel: 'bajo',
             materialType: 'reciclable'
         });
+        setImages([]);
+        setImageError('');
         setTempMarker({
             position: [latlng.lat, latlng.lng],
             timestamp: new Date().toLocaleTimeString()
@@ -342,6 +455,11 @@ function MyMapComponent() {
             return;
         }
 
+        if (images.length > MAX_IMAGES) {
+            alert(`Solo puedes subir hasta ${MAX_IMAGES} imágenes.`);
+            return;
+        }
+
         setCargando(true);
 
         try {
@@ -361,6 +479,7 @@ function MyMapComponent() {
                     materialType: formData.materialType,
                     latitud: tempMarker.position[0],
                     longitud: tempMarker.position[1],
+                    imagenes: images.map((img) => img.dataUrl),
                 }),
             });
 
@@ -375,6 +494,8 @@ function MyMapComponent() {
 
             alert("Punto registrado correctamente");
             setTempMarker(null);
+            setImages([]);
+            setImageError('');
 
         } catch (error) {
             console.error("Error al guardar el reporte:", error);
@@ -419,7 +540,7 @@ function MyMapComponent() {
                         Registrar punto de localización de residuos
                     </button>
                     {isAddingMode && (
-                        <button onClick={() => { setIsAddingMode(false); setTempMarker(null); }} style={btnStyle('#a1303c')}>
+                        <button onClick={() => { setIsAddingMode(false); setTempMarker(null); setImages([]); setImageError(''); }} style={btnStyle('#a1303c')}>
                             Cancelar / Terminar
                         </button>
                     )}
@@ -468,7 +589,7 @@ function MyMapComponent() {
                 {/* Marcador temporal con el Formulario */}
                 {tempMarker && (
                     <Marker position={tempMarker.position}>
-                        <Popup onClose={() => setTempMarker(null)}>
+<Popup onClose={() => { setTempMarker(null); setImages([]); setImageError(''); }}>
 
                             <form onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '200px' }}>
                                 <strong style={{ textAlign: 'center', borderBottom: '1px solid #eee', paddingBottom: '5px' }}>Detalles del Reporte</strong>
@@ -556,6 +677,47 @@ function MyMapComponent() {
                                     <option value="no reciclable">No reciclable</option>
                                 </select>
 
+                                <label style={{ fontSize: '0.8rem' }}>Imágenes (máximo {MAX_IMAGES}):</label>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    multiple
+                                    onChange={handleImageSelection}
+                                    style={{ padding: '5px' }}
+                                />
+                                {imageError && (
+                                    <div style={{ color: 'red', fontSize: '0.8rem' }}>{imageError}</div>
+                                )}
+                                {images.length > 0 && (
+                                    <div style={{ display: 'grid', gap: '8px', marginTop: '8px' }}>
+                                        {images.map((img, idx) => (
+                                            <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <img
+                                                    src={img.dataUrl}
+                                                    alt={`preview-${idx}`}
+                                                    style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #ccc' }}
+                                                />
+                                                <div style={{ flex: 1, fontSize: '0.8rem' }}>
+                                                    <div>{img.name}</div>
+                                                    <div style={{ color: '#555' }}>{(img.size / 1024).toFixed(1)} KB</div>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeImage(idx)}
+                                                    style={{
+                                                        background: '#a1303c',
+                                                        color: 'white',
+                                                        border: 'none',
+                                                        borderRadius: '6px',
+                                                        padding: '6px 10px',
+                                                        cursor: 'pointer'
+                                                    }}
+                                                >Eliminar</button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
                                 {(() => {
                                     const preview = analyzeReport(formData);
                                     if (!preview.valid) return null;
@@ -601,6 +763,21 @@ function MyMapComponent() {
                                         </b><br />
                                         <span style={{ fontSize: '0.8rem' }}>{analysis.recomendacion}</span><br />
                                     </>
+                                )}
+                                {marker.imagenes && marker.imagenes.length > 0 && (
+                                    <div style={{ marginTop: '8px', display: 'grid', gap: '6px' }}>
+                                        <strong>Imágenes:</strong>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                            {marker.imagenes.slice(0, 3).map((src, idx) => (
+                                                <img
+                                                    key={idx}
+                                                    src={src}
+                                                    alt={`Reporte ${marker.id} imagen ${idx + 1}`}
+                                                    style={{ width: '80px', height: '60px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #ddd' }}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
                                 )}
                                 <small style={{ color: '#888' }}>{marker.timestamp}</small>
                             </Popup>

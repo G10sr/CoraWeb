@@ -8,8 +8,8 @@ const app = express();
 const pexels = createClient(process.env.PEXELS_KEY);
 
 app.use(cors());
-app.use(express.json({ limit: "200mb" }));
-app.use(express.urlencoded({ limit: "200mb", extended: true }));
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
 // =====================================================
 // CACHE DIARIO PEXELS (1 request por día)
@@ -251,6 +251,7 @@ app.get("/api/reportes", async (req, res) => {
         r.reportado_por,
         r.riesgo_contaminacion,
         r.tipo_residuo,
+        r.imagenes,
         r.verificado,
         u.nombre AS reportado_por_nombre,
         reg.region_name
@@ -276,6 +277,7 @@ app.get("/api/reportes", async (req, res) => {
       reportado_por: reporte.reportado_por_nombre || reporte.reportado_por,
       riesgo_contaminacion: reporte.riesgo_contaminacion,
       tipo_residuo: reporte.tipo_residuo,
+      imagenes: reporte.imagenes || [],
       verificado: reporte.verificado,
       region_name: reporte.region_name,
     }));
@@ -307,6 +309,7 @@ app.post("/api/reportes", async (req, res) => {
       materialType,
       latitud,
       longitud,
+      imagenes = [],
     } = req.body;
 
     if (!usuarioId || !amount || latitud == null || longitud == null) {
@@ -314,6 +317,14 @@ app.post("/api/reportes", async (req, res) => {
         ok: false,
         message: "usuarioId, amount, latitud y longitud son requeridos",
       });
+    }
+
+    if (!Array.isArray(imagenes)) {
+      return res.status(400).json({ ok: false, message: "imagenes debe ser un arreglo" });
+    }
+
+    if (imagenes.length > 3) {
+      return res.status(400).json({ ok: false, message: "Solo se permiten hasta 3 imágenes." });
     }
 
     let regionId = null;
@@ -348,7 +359,8 @@ app.post("/api/reportes", async (req, res) => {
         region_id,
         reportado_por,
         riesgo_contaminacion,
-        tipo_residuo
+        tipo_residuo,
+        imagenes
       ) VALUES (
         ${amount},
         ${waterProximity},
@@ -359,7 +371,8 @@ app.post("/api/reportes", async (req, res) => {
         ${regionId},
         ${usuarioId},
         ${riskLevel},
-        ${wasteType}
+        ${wasteType},
+        ${imagenes}
       )
       RETURNING *
     `;

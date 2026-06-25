@@ -75,7 +75,10 @@ function formatReporte(reporte) {
     id: reporte.id,
     name,
     region,
-    image: imagePool[hashStringToIndex(reporte.id, imagePool.length)],
+    imagenes: reporte.imagenes || [],
+    image: (reporte.imagenes && reporte.imagenes.length > 0)
+      ? reporte.imagenes[0]
+      : imagePool[hashStringToIndex(reporte.id, imagePool.length)],
     wasteType: reporte.tipo_residuo,
     verified: reporte.verificado || false,
     amount: reporte.cantidad,
@@ -205,7 +208,21 @@ function PointDetailModal({ point, onClose }) {
           <span className="archivero-modal-region-badge">{point.region}</span>
         </div>
 
+        
+
         <div className="archivero-modal-body">
+          {point.imagenes && point.imagenes.length > 1 && (
+          <div className="archivero-modal-gallery">
+            {point.imagenes.slice(0, 4).map((src, idx) => (
+              <img
+                key={idx}
+                className="archivero-modal-thumb"
+                src={src}
+                alt={`Imagen ${idx + 2} de ${point.name}`}
+              />
+            ))}
+          </div>
+        )}
           <header className="archivero-modal-header">
             <h2 id="archivero-modal-title" className="archivero-modal-title nature-title">
               {point.name}
@@ -355,11 +372,10 @@ function ArchiveroPage() {
             id: reporte.id,
             name,
             region,
-            image: imagePool[hashStringToIndex(reporte.id, imagePool.length)],
-            wasteType: reporte.tipo_residuo,
-            verified: reporte.verificado || false,
-            amount: reporte.cantidad,
-            slope: reporte.pendiente,
+    imagenes: reporte.imagenes || [],
+    image: (reporte.imagenes && reporte.imagenes.length > 0)
+      ? reporte.imagenes[0]
+      : imagePool[hashStringToIndex(reporte.id, imagePool.length)],
             waterProximity: reporte.cercania_agua,
             riskLevel: reporte.riesgo_contaminacion,
             materialType: reporte.clasificacion_material,
