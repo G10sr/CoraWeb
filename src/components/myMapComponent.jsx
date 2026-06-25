@@ -99,8 +99,8 @@ function FocusMap({ position }) {
 // --- COMPONENTE PRINCIPAL ---
 function MyMapComponent() {
     const USER_ID = JSON.parse(localStorage.getItem("user")).id;
-const location = useLocation();
-const navigate = useNavigate();
+    const location = useLocation();
+    const navigate = useNavigate();
     const focusPoint = location.state?.focus;
     const skipLocationFly = location.state?.skipLocationFly;
     const [focusPosition, setFocusPosition] = useState(null);
@@ -190,13 +190,13 @@ const navigate = useNavigate();
         cargarRegiones();
     }, []);
 
-useEffect(() => {
-    if (!focusPoint) return;
+    useEffect(() => {
+        if (!focusPoint) return;
 
-    setFocusPosition(focusPoint);
+        setFocusPosition(focusPoint);
 
-    window.history.replaceState({}, document.title);
-}, [focusPoint]);
+        window.history.replaceState({}, document.title);
+    }, [focusPoint]);
 
     useEffect(() => {
         if (locationEnabled && "geolocation" in navigator) {
@@ -478,8 +478,13 @@ useEffect(() => {
                                     type="text"
                                     placeholder="Tu nombre"
                                     value={formData.name}
+                                    disabled={!!perfil?.nombre}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    style={{ padding: '5px' }}
+                                    style={{
+                                        padding: '5px',
+                                        backgroundColor: perfil?.nombre ? '#f0f0f0' : 'white',
+                                        cursor: perfil?.nombre ? 'not-allowed' : 'text'
+                                    }}
                                 />
 
                                 <label style={{ fontSize: '0.8rem' }}>Región:</label>

@@ -183,7 +183,14 @@ p {
 
 }
 
+
+
 @media (max-width:980px) {
+  .posts-grid {
+  grid-template-columns: repeat(3, 1fr);
+}
+}
+@media (max-width:500px) {
   .posts-grid {
   grid-template-columns: repeat(1, 1fr);
 }

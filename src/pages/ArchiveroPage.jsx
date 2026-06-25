@@ -14,10 +14,9 @@ const imagePool = [basura1, basura2, basura3];
 const allowedRegions = ["Colegio CTP CIT", "Soda armonia"];
 
 const defaultDescription = (name, region, verified) =>
-  `${name} es un punto de recoleccion en ${region}. ${
-    verified
-      ? "Este punto ha sido verificado por la comunidad."
-      : "Este punto no ha sido verificado por la comunidad."
+  `${name} es un punto de recoleccion en ${region}. ${verified
+    ? "Este punto ha sido verificado por la comunidad."
+    : "Este punto no ha sido verificado por la comunidad."
   }`;
 const hashStringToIndex = (value, modulo) => {
   const text = String(value || "");
@@ -97,8 +96,39 @@ function PointDetailModal({ point, onClose }) {
   const [commentAuthor, setCommentAuthor] = useState("");
   const [commentText, setCommentText] = useState("");
   const [comments, setComments] = useState([]);
+  const [perfil, setPerfil] = useState(null);
   const USER_ID = JSON.parse(localStorage.getItem("user")).id;
   const USER_ROL = JSON.parse(localStorage.getItem("user")).rol;
+
+  useEffect(() => {
+    const cargarPerfil = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:3000/api/load-perfil",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              id: USER_ID,
+            }),
+          }
+        );
+
+        const data = await response.json();
+
+        if (data.perfil) {
+          setPerfil(data.perfil);
+          setCommentAuthor(data.perfil.nombre || "");
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    cargarPerfil();
+  }, [USER_ID]);
 
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -149,7 +179,6 @@ function PointDetailModal({ point, onClose }) {
 
         setComments((c) => [newComment, ...c]);
         setCommentText("");
-        setCommentAuthor("");
       } catch (err) {
         console.error('Error creando comentario:', err);
         alert('No se pudo publicar el comentario');
@@ -225,9 +254,19 @@ function PointDetailModal({ point, onClose }) {
               <input
                 type="text"
                 className="archivero-comment-input"
-                placeholder="Tu nombre (opcional)"
+                placeholder="Tu nombre"
                 value={commentAuthor}
-                onChange={(event) => setCommentAuthor(event.target.value)}
+                readOnly={!!perfil?.nombre}
+                style={
+                  perfil?.nombre
+                    ? {
+                      backgroundColor: "#f3f4f6",
+                      color: "#666",
+                      cursor: "default",
+                      border: "1px solid #d1d5db"
+                    }
+                    : {}
+                }
               />
               <textarea
                 className="archivero-comment-textarea"
