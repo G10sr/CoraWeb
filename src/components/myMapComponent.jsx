@@ -231,7 +231,7 @@ function MyMapComponent() {
     async function cargarPerfil() {
         try {
             const response = await fetch(
-                "http://localhost:3000/api/load-perfil",
+                "/api/load-perfil",
                 {
                     method: "POST",
                     headers: {
@@ -279,7 +279,7 @@ function MyMapComponent() {
     useEffect(() => {
         const cargarRegiones = async () => {
             try {
-                const response = await fetch("http://localhost:3000/api/regiones");
+                const response = await fetch("/api/regiones");
                 const data = await response.json();
                 if (!data.ok) {
                     throw new Error(data.message || "Error al cargar regiones");
@@ -328,7 +328,7 @@ function MyMapComponent() {
 
     async function cargarReportes() {
         try {
-            const response = await fetch("http://localhost:3000/api/reportes");
+            const response = await fetch("/api/reportes");
             const data = await response.json();
 
             if (!data.ok) {
@@ -481,7 +481,7 @@ function MyMapComponent() {
         setCargando(true);
 
         try {
-            const response = await fetch("http://localhost:3000/api/reportes", {
+            const response = await fetch("/api/reportes", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
