@@ -9,7 +9,7 @@ import usr_img from "../assets/img/usr_unk.jpeg";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { useNavigate } from "react-router-dom";
-import ArchiveIcon from "../assets/img/icons/box-archive-solid-full.svg";
+import ArchiveIcon from "../assets/img/icons/file.svg";
 import CertificateIcon from "../assets/img/icons/certificate-solid-full.svg";
 
 function MiniMap({ position }) {
@@ -243,8 +243,7 @@ function Profile() {
         <button
           className="edit-profile-btn"
           onClick={() => setShowEditModal(true)}
-        >
-          Editar perfil
+        img>
         </button>
         <button
           onClick={() => {

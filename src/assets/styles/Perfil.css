@@ -1,13 +1,3 @@
-/*Color palette*/
-:root {
-  /*stats 1 y 2*/
---btnpostperfil: #00978D
---btnpostverificado: #E1DEA3
---fontpostsperfil: #FFFDEA
---fontpostsverificado: #024241
-/*general*/
---fontperfil: #024241
-}
 
 body {
   margin: 0;
@@ -49,10 +39,12 @@ body {
 
 /* STATS */
 #stat1 {
-  background-color: var(--btnpostperfil)
+  background-color: var(--btnposts);
+  color: var(--fontposts)
 }
 #stat2 {
-  background-color: var(--btnpostverificado)
+  background-color: var(--btnverificado);
+  color: var(--fontverificado);
 }
 .stats {
   position: absolute;
