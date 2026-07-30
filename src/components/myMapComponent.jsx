@@ -1,14 +1,15 @@
 // --- IMPORTACIONES ---
-import { useState, useEffect, memo } from 'react';
+import { useState, useEffect, useRef, memo } from 'react';
 import { useLocation, useNavigate } from "react-router-dom";
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap, useMapEvents, Circle, CircleMarker, Pane } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap, useMapEvents, Circle, CircleMarker, Pane, Polyline } from 'react-leaflet';
 import CoraFeedbackModal from './CoraFeedbackModal.jsx';
 import { supabase } from '../lib/supabaseClient';
 
-// AgenteCora: analisis de riesgo del formulario
+// AgenteCora: analisis de riesgo del formulario y revision de imagenes
 import { analyzeReport } from '../agent/agenteCora';
+import { reviewImage } from '../agent/coraVision';
 import '../assets/styles/AgenteCora.css';
 
 
@@ -73,14 +74,32 @@ function MapEventsHandler({ onMapClick, isActive }) {
     return null;
 }
 
+// Con la ubicacion en tiempo real la posicion cambia constantemente, por eso solo centramos
+// en la primera lectura de cada activacion y despues dejamos que el usuario mueva el mapa.
 function RecenterMap({ position, disabled }) {
+    const map = useMap();
+    const centered = useRef(false);
+
+    useEffect(() => {
+        if (!position) {
+            centered.current = false;
+            return;
+        }
+        if (disabled || centered.current) return;
+        centered.current = true;
+        map.flyTo(position, 16);
+    }, [position, map, disabled]);
+
+    return null;
+}
+
+function FitRoute({ coords }) {
     const map = useMap();
 
     useEffect(() => {
-        if (position && !disabled) {
-            map.flyTo(position, 16);
-        }
-    }, [position, map, disabled]);
+        if (!coords || coords.length === 0) return;
+        map.fitBounds(L.latLngBounds(coords), { padding: [70, 70] });
+    }, [coords, map]);
 
     return null;
 }
@@ -109,6 +128,7 @@ function MyMapComponent() {
     const skipLocationFly = location.state?.skipLocationFly;
     const [focusPosition, setFocusPosition] = useState(null);
     const [userPosition, setUserPosition] = useState(null);
+    const [locationAccuracy, setLocationAccuracy] = useState(null);
     const [customMarkers, setCustomMarkers] = useState([]);
     const [isAddingMode, setIsAddingMode] = useState(false);
     const [cargando, setCargando] = useState(false);
@@ -116,6 +136,9 @@ function MyMapComponent() {
     const [perfil, setPerfil] = useState(null);
     const [images, setImages] = useState([]);
     const [imageError, setImageError] = useState('');
+    const [revisandoImagenes, setRevisandoImagenes] = useState(false);
+    const [route, setRoute] = useState(null);
+    const [routeLoadingId, setRouteLoadingId] = useState(null);
     const [locationEnabled, setLocationEnabled] = useState(() => {
         return localStorage.getItem("locationEnabled") === "true";
     });
@@ -208,18 +231,27 @@ function MyMapComponent() {
 
         try {
             setImageError('');
+            setRevisandoImagenes(true);
             const compressedFiles = [];
             for (const file of selectedFiles) {
                 if (!file.type.startsWith('image/')) {
                     throw new Error(`El archivo ${file.name} no es una imagen válida.`);
                 }
-                compressedFiles.push(await compressImageFile(file));
+                const compressed = await compressImageFile(file);
+
+                const revision = await reviewImage(compressed.dataUrl, file.name);
+                if (!revision.ok) {
+                    throw new Error(revision.motivo);
+                }
+
+                compressedFiles.push(compressed);
             }
 
             setImages((current) => [...current, ...compressedFiles].slice(0, MAX_IMAGES));
         } catch (error) {
             setImageError(error.message || 'Error al procesar las imágenes.');
         } finally {
+            setRevisandoImagenes(false);
             event.target.value = '';
         }
     };
@@ -304,26 +336,29 @@ function MyMapComponent() {
         window.history.replaceState({}, document.title);
     }, [focusPoint]);
 
+    // Ubicacion en tiempo real: el navegador nos avisa cada vez que el GPS cambia de posicion.
     useEffect(() => {
-        if (locationEnabled && "geolocation" in navigator) {
-            navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    setUserPosition([
-                        pos.coords.latitude,
-                        pos.coords.longitude
-                    ]);
-                },
-                (error) => {
-                    showFeedback({
-                        variant: 'error',
-                        title: 'Ubicación',
-                        message: 'Error al obtener ubicación: ' + error.message,
-                        confirmLabel: 'Entendido'
-                    });
-                },
-                { enableHighAccuracy: true }
-            );
-        }
+        if (!locationEnabled || !("geolocation" in navigator)) return;
+
+        const watchId = navigator.geolocation.watchPosition(
+            (pos) => {
+                setUserPosition([pos.coords.latitude, pos.coords.longitude]);
+                setLocationAccuracy(pos.coords.accuracy);
+            },
+            (error) => {
+                setLocationEnabled(false);
+                localStorage.setItem("locationEnabled", "false");
+                showFeedback({
+                    variant: 'error',
+                    title: 'Ubicación',
+                    message: 'Error al obtener ubicación: ' + error.message,
+                    confirmLabel: 'Entendido'
+                });
+            },
+            { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 }
+        );
+
+        return () => navigator.geolocation.clearWatch(watchId);
     }, [locationEnabled]);
 
     async function cargarReportes() {
@@ -389,21 +424,6 @@ function MyMapComponent() {
         };
     }, []);
 
-    const activateLocation = () => {
-        if ("geolocation" in navigator) {
-            navigator.geolocation.getCurrentPosition(
-                (pos) => setUserPosition([pos.coords.latitude, pos.coords.longitude]),
-                (error) => showFeedback({
-                    variant: 'error',
-                    title: 'Ubicación no disponible',
-                    message: 'Error al obtener ubicación: ' + error.message,
-                    confirmLabel: 'Entendido'
-                }),
-                { enableHighAccuracy: true }
-            );
-        }
-    };
-
     const handleMapClick = (latlng) => {
         setFormData({
             name: '',
@@ -424,36 +444,75 @@ function MyMapComponent() {
     };
 
     const toggleLocation = () => {
-        if (locationEnabled) {
-            // Desactivar ubicación
+        const activar = !locationEnabled;
+        setLocationEnabled(activar);
+        localStorage.setItem("locationEnabled", String(activar));
+
+        if (!activar) {
             setUserPosition(null);
-            setLocationEnabled(false);
-            localStorage.setItem("locationEnabled", "false");
+            setLocationAccuracy(null);
+            setRoute(null);
+        }
+    };
+
+    const formatDistance = (metros) => (
+        metros >= 1000 ? `${(metros / 1000).toFixed(1)} km` : `${Math.round(metros)} m`
+    );
+
+    const formatDuration = (segundos) => {
+        const minutos = Math.round(segundos / 60);
+        if (minutos < 60) return `${minutos} min`;
+        return `${Math.floor(minutos / 60)} h ${minutos % 60} min`;
+    };
+
+    // Traza la ruta a pie desde la ubicacion del usuario hasta el punto reportado.
+    const verRuta = async (marker) => {
+        if (!userPosition) {
+            showFeedback({
+                variant: 'warning',
+                title: 'Activa tu ubicación',
+                message: 'Para trazarte la ruta necesito saber dónde estás. Toca "Activar mi ubicación" y vuelve a intentarlo.',
+                confirmLabel: 'Entendido'
+            });
             return;
         }
 
-        // Activar ubicación
-        if ("geolocation" in navigator) {
-            navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    setUserPosition([
-                        pos.coords.latitude,
-                        pos.coords.longitude
-                    ]);
+        setRouteLoadingId(marker.id);
 
-                    setLocationEnabled(true);
-                    localStorage.setItem("locationEnabled", "true");
-                },
-                (error) => {
-                    showFeedback({
-                        variant: 'error',
-                        title: 'Ubicación',
-                        message: 'Error al obtener ubicación: ' + error.message,
-                        confirmLabel: 'Entendido'
-                    });
-                },
-                { enableHighAccuracy: true }
+        const [origenLat, origenLng] = userPosition;
+        const [destinoLat, destinoLng] = marker.position;
+
+        try {
+            const response = await fetch(
+                `https://router.project-osrm.org/route/v1/foot/${origenLng},${origenLat};${destinoLng},${destinoLat}?overview=full&geometries=geojson`
             );
+            const data = await response.json();
+            const ruta = data.routes?.[0];
+
+            if (!ruta) {
+                throw new Error('Sin ruta disponible');
+            }
+
+            setRoute({
+                id: marker.id,
+                nombre: marker.region,
+                coords: ruta.geometry.coordinates.map(([lng, lat]) => [lat, lng]),
+                distancia: formatDistance(ruta.distance),
+                duracion: formatDuration(ruta.duration),
+                aproximada: false,
+            });
+        } catch (error) {
+            // Si el servicio de rutas no responde mostramos al menos la linea directa al punto.
+            setRoute({
+                id: marker.id,
+                nombre: marker.region,
+                coords: [userPosition, marker.position],
+                distancia: formatDistance(L.latLng(userPosition).distanceTo(L.latLng(marker.position))),
+                duracion: null,
+                aproximada: true,
+            });
+        } finally {
+            setRouteLoadingId(null);
         }
     };
     const handleFormSubmit = async (e) => {
@@ -536,43 +595,73 @@ function MyMapComponent() {
         <div style={{ position: 'relative', height: '100vh', width: '100vw' }}>
 
             {/* Cuadro Flotante - UI */}
-            <div style={{
-                position: 'fixed',
-                top: '80px',
-                left: '20px',
-                zIndex: 1000,
-                backgroundColor: 'white',
-                padding: '20px',
-                borderRadius: '12px',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '10px',
-                minWidth: '220px'
-            }}>
-                <h2 className="nature-title" style={{ margin: '0', fontSize: '1.3rem' }}>Cora Web</h2>
+            <div className="cora-map-panel">
+                <h2 className="nature-title cora-map-panel-title">Cora Web</h2>
 
                 <button
                     data-tour="location"
                     onClick={toggleLocation}
-                    style={btnStyle(locationEnabled ? '#4dcec5' : '#00978D')}
+                    className={`cora-btn ${locationEnabled ? 'cora-btn--live' : 'cora-btn--teal'}`}
                 >
                     {locationEnabled
                         ? 'Desactivar ubicación'
                         : 'Activar mi ubicación'}
                 </button>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <button data-tour="register" onClick={() => setIsAddingMode(true)} style={btnStyle(isAddingMode ? '#A7BD8A' : '#688f35')}>
-                        Registrar punto de localización de residuos
+                {locationEnabled && (
+                    <span className="cora-live-hint">
+                        <span className="cora-live-dot" />
+                        {userPosition
+                            ? `En vivo${locationAccuracy ? ` · precisión ${Math.round(locationAccuracy)} m` : ''}`
+                            : 'Buscando tu señal GPS...'}
+                    </span>
+                )}
+
+                <button
+                    data-tour="register"
+                    onClick={() => setIsAddingMode(true)}
+                    className={`cora-btn ${isAddingMode ? 'cora-btn--sage' : 'cora-btn--green'}`}
+                >
+                    Registrar punto de localización de residuos
+                </button>
+                {isAddingMode && (
+                    <button
+                        onClick={() => { setIsAddingMode(false); setTempMarker(null); setImages([]); setImageError(''); }}
+                        className="cora-btn cora-btn--danger"
+                    >
+                        Cancelar / Terminar
                     </button>
-                    {isAddingMode && (
-                        <button onClick={() => { setIsAddingMode(false); setTempMarker(null); setImages([]); setImageError(''); }} style={btnStyle('#a1303c')}>
-                            Cancelar / Terminar
-                        </button>
-                    )}
-                </div>
+                )}
             </div>
+
+            {route && (
+                <div className="cora-route-panel">
+                    <div className="cora-route-head">
+                        <strong>Ruta hacia el punto</strong>
+                        <button
+                            type="button"
+                            className="cora-route-close"
+                            onClick={() => setRoute(null)}
+                            aria-label="Quitar ruta"
+                        >
+                            &times;
+                        </button>
+                    </div>
+                    <p className="cora-route-dest">{route.nombre}</p>
+                    <div className="cora-route-stats">
+                        <span>{route.distancia}</span>
+                        {route.duracion && <span>{route.duracion} caminando</span>}
+                    </div>
+                    {route.aproximada && (
+                        <p className="cora-route-note">
+                            Ruta aproximada en línea recta: el servicio de calles no respondió.
+                        </p>
+                    )}
+                    <button type="button" className="cora-btn cora-btn--danger" onClick={() => setRoute(null)}>
+                        Quitar ruta
+                    </button>
+                </div>
+            )}
 
             <MapContainer center={[9.9772, -84.1833]} zoom={13} style={{ height: '100%', width: '100%' }}>
                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
@@ -584,12 +673,26 @@ function MyMapComponent() {
                 />
                 <MapEventsHandler onMapClick={handleMapClick} isActive={isAddingMode} />
 
+                {route && (
+                    <>
+                        <Polyline
+                            positions={route.coords}
+                            pathOptions={{ color: '#04504F', weight: 8, opacity: 0.25 }}
+                        />
+                        <Polyline
+                            positions={route.coords}
+                            pathOptions={{ color: '#00978D', weight: 4, opacity: 0.95, dashArray: route.aproximada ? '8 8' : null }}
+                        />
+                        <FitRoute coords={route.coords} />
+                    </>
+                )}
+
                 {/* precisión */}
                 {userPosition && (
                     <Pane name="user-layer" style={{ zIndex: 1000 }}>
                         <Circle
                             center={userPosition}
-                            radius={50}
+                            radius={locationAccuracy || 50}
                             pathOptions={{
                                 color: "#2A93EE",
                                 fillColor: "#2A93EE",
@@ -616,147 +719,168 @@ function MyMapComponent() {
                 {/* Marcador temporal con el Formulario */}
                 {tempMarker && (
                     <Marker position={tempMarker.position}>
-                        <Popup onClose={() => { setTempMarker(null); setImages([]); setImageError(''); }}>
+                        <Popup
+                            className="cora-form-popup"
+                            minWidth={480}
+                            maxWidth={520}
+                            onClose={() => { setTempMarker(null); setImages([]); setImageError(''); }}
+                        >
 
-                            <form onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '200px' }}>
-                                <strong style={{ textAlign: 'center', borderBottom: '1px solid #eee', paddingBottom: '5px' }}>Detalles del Reporte</strong>
+                            <form onSubmit={handleFormSubmit} className="cora-form">
+                                <strong className="cora-form-heading">Detalles del Reporte</strong>
 
-                                <label style={{ fontSize: '0.8rem' }}>Reportado por:</label>
-                                <input
-                                    type="text"
-                                    placeholder="Tu nombre"
-                                    value={formData.name}
-                                    disabled={!!perfil?.nombre}
-                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    style={{
-                                        padding: '5px',
-                                        backgroundColor: perfil?.nombre ? '#f0f0f0' : 'white',
-                                        cursor: perfil?.nombre ? 'not-allowed' : 'text'
-                                    }}
-                                />
+                                <div className="cora-form-grid">
+                                    <div className="cora-form-col">
+                                        <label>Reportado por:</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Tu nombre"
+                                            value={formData.name}
+                                            disabled={!!perfil?.nombre}
+                                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                        />
 
-                                <label style={{ fontSize: '0.8rem' }}>Región:</label>
-                                <select
-                                    value={formData.region}
-                                    onChange={(e) => setFormData({ ...formData, region: e.target.value })}
-                                    style={{ padding: '5px' }}
-                                >
-                                    {regionOptions.length > 0 ? (
-                                        regionOptions.map((region) => (
-                                            <option value={region} key={region}>{region}</option>
-                                        ))
-                                    ) : (
-                                        <option value="" disabled>Cargando regiones...</option>
-                                    )}
-                                </select>
+                                        <label>Región:</label>
+                                        <select
+                                            value={formData.region}
+                                            onChange={(e) => setFormData({ ...formData, region: e.target.value })}
+                                        >
+                                            {regionOptions.length > 0 ? (
+                                                regionOptions.map((region) => (
+                                                    <option value={region} key={region}>{region}</option>
+                                                ))
+                                            ) : (
+                                                <option value="" disabled>Cargando regiones...</option>
+                                            )}
+                                        </select>
 
-                                {/* Tipo de Residuo */}
-                                <label style={{ fontSize: '0.8rem' }}>Tipo de residuo:</label>
-                                <select value={formData.wasteType} onChange={(e) => setFormData({ ...formData, wasteType: e.target.value })} style={{ padding: '5px' }}>
-                                    <option value="organico">Orgánico</option>
-                                    <option value="plastico">Plástico</option>
-                                    <option value="vidrio">Vidrio</option>
-                                    <option value="metal">Envases metálicos</option>
-                                    <option value="carton">Cartón</option>
-                                    <option value="papel">Papel</option>
-                                </select>
+                                        {/* Tipo de Residuo */}
+                                        <label>Tipo de residuo:</label>
+                                        <select value={formData.wasteType} onChange={(e) => setFormData({ ...formData, wasteType: e.target.value })}>
+                                            <option value="organico">Orgánico</option>
+                                            <option value="plastico">Plástico</option>
+                                            <option value="vidrio">Vidrio</option>
+                                            <option value="metal">Envases metálicos</option>
+                                            <option value="carton">Cartón</option>
+                                            <option value="papel">Papel</option>
+                                        </select>
 
-                                {/* Cantidad de Residuos */}
-                                <label style={{ fontSize: '0.8rem' }}>Cantidad de residuos:</label>
-                                <input
-                                    type="number"
-                                    placeholder="Cantidad"
-                                    min="0"
-                                    value={formData.amount}
-                                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                                    style={{ padding: '5px' }}
-                                />
+                                        {/* Cantidad de Residuos */}
+                                        <label>Cantidad de residuos:</label>
+                                        <input
+                                            type="number"
+                                            placeholder="Cantidad"
+                                            min="0"
+                                            value={formData.amount}
+                                            onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                                        />
 
-                                {/* Pendiente */}
-                                <label style={{ fontSize: '0.8rem' }}>Pendiente:</label>
-                                <select value={formData.slope} onChange={(e) => setFormData({ ...formData, slope: e.target.value })} style={{ padding: '5px' }}>
-                                    <option value="plano">Plano</option>
-                                    <option value="leve">Leve</option>
-                                    <option value="pronunciada">Pronunciada</option>
-                                    <option value="intensa">Intensa</option>
-                                </select>
+                                        {/* Pendiente */}
+                                        <label>Pendiente:</label>
+                                        <select value={formData.slope} onChange={(e) => setFormData({ ...formData, slope: e.target.value })}>
+                                            <option value="plano">Plano</option>
+                                            <option value="leve">Leve</option>
+                                            <option value="pronunciada">Pronunciada</option>
+                                            <option value="intensa">Intensa</option>
+                                        </select>
 
-                                {/* Cercania a Cuerpos de agua */}
-                                <label style={{ fontSize: '0.8rem' }}>Cercanía al cuerpo de agua:</label>
-                                <select value={formData.waterProximity} onChange={(e) => setFormData({ ...formData, waterProximity: e.target.value })} style={{ padding: '5px' }}>
-                                    <option value="˂50m">˂50m</option>
-                                    <option value="≥100m">≥100m</option>
-                                    <option value="≥500m">≥500m</option>
-                                </select>
+                                        {/* Cercania a Cuerpos de agua */}
+                                        <label>Cercanía al cuerpo de agua:</label>
+                                        <select value={formData.waterProximity} onChange={(e) => setFormData({ ...formData, waterProximity: e.target.value })}>
+                                            <option value="˂50m">˂50m</option>
+                                            <option value="≥100m">≥100m</option>
+                                            <option value="≥500m">≥500m</option>
+                                        </select>
 
-                                {/* Riesgo de contaminación */}
-                                <label style={{ fontSize: '0.8rem' }}>Riesgo de contaminación:</label>
-                                <select value={formData.riskLevel} onChange={(e) => setFormData({ ...formData, riskLevel: e.target.value })} style={{ padding: '5px' }}>
-                                    <option value="bajo">Bajo</option>
-                                    <option value="medio">Medio</option>
-                                    <option value="alto">Alto</option>
-                                </select>
+                                        {/* Riesgo de contaminación */}
+                                        <label>Riesgo de contaminación:</label>
+                                        <select value={formData.riskLevel} onChange={(e) => setFormData({ ...formData, riskLevel: e.target.value })}>
+                                            <option value="bajo">Bajo</option>
+                                            <option value="medio">Medio</option>
+                                            <option value="alto">Alto</option>
+                                        </select>
 
-                                {/* Tipo de Material */}
-                                <label style={{ fontSize: '0.8rem' }}>El material clasifica como:</label>
-                                <select value={formData.materialType} onChange={(e) => setFormData({ ...formData, materialType: e.target.value })} style={{ padding: '5px' }}>
-                                    <option value="reciclable">Reciclable</option>
-                                    <option value="no reciclable">No reciclable</option>
-                                </select>
-
-                                <label style={{ fontSize: '0.8rem' }}>Imágenes (máximo {MAX_IMAGES}):</label>
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    multiple
-                                    onChange={handleImageSelection}
-                                    style={{ padding: '5px' }}
-                                />
-                                {imageError && (
-                                    <div style={{ color: 'red', fontSize: '0.8rem' }}>{imageError}</div>
-                                )}
-                                {images.length > 0 && (
-                                    <div style={{ display: 'grid', gap: '8px', marginTop: '8px' }}>
-                                        {images.map((img, idx) => (
-                                            <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                <img
-                                                    src={img.dataUrl}
-                                                    alt={`preview-${idx}`}
-                                                    style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #ccc' }}
-                                                />
-                                                <div style={{ flex: 1, fontSize: '0.8rem' }}>
-                                                    <div>{img.name}</div>
-                                                    <div style={{ color: '#555' }}>{(img.size / 1024).toFixed(1)} KB</div>
-                                                </div>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => removeImage(idx)}
-                                                    style={{
-                                                        background: '#a1303c',
-                                                        color: 'white',
-                                                        border: 'none',
-                                                        borderRadius: '6px',
-                                                        padding: '6px 10px',
-                                                        cursor: 'pointer'
-                                                    }}
-                                                >Eliminar</button>
-                                            </div>
-                                        ))}
+                                        {/* Tipo de Material */}
+                                        <label>El material clasifica como:</label>
+                                        <select value={formData.materialType} onChange={(e) => setFormData({ ...formData, materialType: e.target.value })}>
+                                            <option value="reciclable">Reciclable</option>
+                                            <option value="no reciclable">No reciclable</option>
+                                        </select>
                                     </div>
-                                )}
 
-                                {(() => {
-                                    const preview = analyzeReport(formData);
-                                    if (!preview.valid) return null;
-                                    return (
-                                        <div className="cora-form-risk" style={{ '--risk-hex': preview.hex }}>
-                                            <strong>AgenteCora: Riesgo {preview.nivel} ({preview.score}/100)</strong>
-                                            {preview.recomendacion}
-                                        </div>
-                                    );
-                                })()}
+                                    <div className="cora-form-col">
+                                        <label>Evidencia fotográfica (máximo {MAX_IMAGES}):</label>
+                                        <p className="cora-form-hint">
+                                            Sube fotos del punto para que el reporte sea más exacto. AgenteCora revisa
+                                            cada imagen en tu navegador y bloquea el contenido no adecuado.
+                                        </p>
 
-                                <button type="submit" disabled={cargando} style={btnStyle(cargando ? '#ccc' : '#00978D')}>
+                                        <label className={`cora-dropzone ${images.length >= MAX_IMAGES ? 'cora-dropzone--full' : ''}`}>
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                multiple
+                                                disabled={revisandoImagenes || images.length >= MAX_IMAGES}
+                                                onChange={handleImageSelection}
+                                            />
+                                            <span className="cora-dropzone-icon">+</span>
+                                            <span className="cora-dropzone-text">
+                                                {images.length >= MAX_IMAGES
+                                                    ? 'Ya alcanzaste el máximo de fotos'
+                                                    : 'Toca para elegir tus fotos'}
+                                            </span>
+                                        </label>
+
+                                        {revisandoImagenes && (
+                                            <div className="cora-vision-status">
+                                                AgenteCora está revisando la imagen...
+                                            </div>
+                                        )}
+
+                                        {imageError && (
+                                            <div className="cora-vision-error">{imageError}</div>
+                                        )}
+
+                                        {images.length > 0 && (
+                                            <div className="cora-thumbs">
+                                                {images.map((img, idx) => (
+                                                    <div className="cora-thumb" key={idx}>
+                                                        <img src={img.dataUrl} alt={`preview-${idx}`} />
+                                                        <div className="cora-thumb-info">
+                                                            <span className="cora-thumb-name">{img.name}</span>
+                                                            <span className="cora-thumb-size">{(img.size / 1024).toFixed(1)} KB</span>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            className="cora-thumb-remove"
+                                                            onClick={() => removeImage(idx)}
+                                                            aria-label={`Eliminar ${img.name}`}
+                                                        >
+                                                            &times;
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {(() => {
+                                            const preview = analyzeReport(formData);
+                                            if (!preview.valid) return null;
+                                            return (
+                                                <div className="cora-form-risk" style={{ '--risk-hex': preview.hex }}>
+                                                    <strong>AgenteCora: Riesgo {preview.nivel} ({preview.score}/100)</strong>
+                                                    {preview.recomendacion}
+                                                </div>
+                                            );
+                                        })()}
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={cargando || revisandoImagenes}
+                                    className="cora-btn cora-btn--teal cora-form-submit"
+                                >
                                     {cargando ? 'Guardando...' : 'Guardar Punto'}
                                 </button>
                             </form>
@@ -807,6 +931,15 @@ function MyMapComponent() {
                                     </div>
                                 )}
                                 <small style={{ color: '#888' }}>{marker.timestamp}</small>
+
+                                <button
+                                    type="button"
+                                    className="cora-btn cora-btn--route"
+                                    disabled={routeLoadingId === marker.id}
+                                    onClick={() => verRuta(marker)}
+                                >
+                                    {routeLoadingId === marker.id ? 'Trazando ruta...' : 'Ver ruta hasta aquí'}
+                                </button>
                             </Popup>
                         </Marker>
                     );
@@ -828,10 +961,5 @@ function MyMapComponent() {
         </div>
     );
 }
-
-const btnStyle = (color) => ({
-    padding: '10px', backgroundColor: color, color: 'white',
-    border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold'
-});
 
 export default MyMapComponent;
