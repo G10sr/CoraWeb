@@ -1,3 +1,14 @@
+/*Color palette*/
+:root {
+  /*stats 1 y 2*/
+--btnpostperfil: #00978D
+--btnpostverificado: #E1DEA3
+--fontpostsperfil: #FFFDEA
+--fontpostsverificado: #024241
+/*general*/
+--fontperfil: #024241
+}
+
 body {
   margin: 0;
   font-family: "Segoe UI", sans-serif;
@@ -37,6 +48,12 @@ body {
 }
 
 /* STATS */
+#stat1 {
+  background-color: var(--btnpostperfil)
+}
+#stat2 {
+  background-color: var(--btnpostverificado)
+}
 .stats {
   position: absolute;
   bottom: -20px;
@@ -46,7 +63,6 @@ body {
 }
 
 .stats div {
-  background-color: #A7BD8A;
   padding: 8px 12px;
   border-radius: 20px;
   text-align: center;
