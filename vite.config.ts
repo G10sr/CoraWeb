@@ -11,10 +11,6 @@ export default defineConfig({
       "/api": {
         target: "http://localhost:3000",
         changeOrigin: true,
-<<<<<<< HEAD
-        secure: false,
-=======
->>>>>>> c6639d1fee54ad51bb9548bcb7d8b9f38e371f49
       },
     },
     hmr: {
