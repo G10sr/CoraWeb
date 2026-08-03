@@ -39,7 +39,7 @@ export default function Login() {
 
     try 
     {
-      fetch("http://localhost:3000/api/login", {
+      fetch("/api/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -114,6 +114,7 @@ export default function Login() {
             </button>
           </form>
         </div>
+        <a className="create-account" href="/register">Crear cuenta</a>
       </main>
 
       <footer className="login-footer">

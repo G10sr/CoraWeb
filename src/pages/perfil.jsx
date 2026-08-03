@@ -75,14 +75,14 @@ const [showEditModal, setShowEditModal] = useState(false);
   }, []);
 
   useEffect(() => {
-    fetch("http://localhost:3000/api/nature-image")
+    fetch("/api/nature-image")
       .then((r) => r.json())
       .then((data) => setBannerImage(data.image));
   }, []);
 
   const eliminarPost = async (postId) => {
     try {
-      const response = await fetch(`http://localhost:3000/api/reportes/${postId}`, {
+      const response = await fetch(`/api/reportes/${postId}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -129,7 +129,7 @@ const [showEditModal, setShowEditModal] = useState(false);
   async function cargarPerfil() {
     try {
       const response = await fetch(
-        "http://localhost:3000/api/load-perfil",
+        "/api/load-perfil",
         {
           method: "POST",
           headers: {
@@ -163,7 +163,7 @@ const [showEditModal, setShowEditModal] = useState(false);
       if (perfil_img) payload.perfil_img = perfil_img;
 
       const response = await fetch(
-        "http://localhost:3000/api/perfil",
+        "/api/perfil",
         {
           method: "PUT",
           headers: {
@@ -200,7 +200,7 @@ const [showEditModal, setShowEditModal] = useState(false);
 
   async function cargarPostsBackend() {
     try {
-      const response = await fetch(`http://localhost:3000/api/reportes?usuarioId=${USER_ID}`);
+      const response = await fetch(`/api/reportes?usuarioId=${USER_ID}`);
       const data = await response.json();
 
       if (!data.ok) {

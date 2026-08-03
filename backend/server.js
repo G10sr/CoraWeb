@@ -180,6 +180,65 @@ app.post("/api/agregar-punto", async (req, res) => {
   }
 });
 
+app.post("/api/register", async (req, res) => {
+  try {
+    const { username, email, password } = req.body;
+
+    if (!username || !email || !password) {
+      return res.status(400).json({
+        ok: false,
+        message: "Usuario, correo y contraseña requeridos",
+      });
+    }
+
+    const existingUser = await sql`
+      SELECT id
+      FROM usuarios
+      WHERE correo = ${email}
+      LIMIT 1
+    `;
+
+    if (existingUser.length > 0) {
+      return res.status(409).json({
+        ok: false,
+        message: "Ya existe una cuenta con ese correo",
+      });
+    }
+
+    const existingName = await sql`
+      SELECT id
+      FROM usuarios
+      WHERE nombre = ${username}
+      LIMIT 1
+    `;
+
+    if (existingName.length > 0) {
+      return res.status(409).json({
+        ok: false,
+        message: "Ese nombre de usuario ya está en uso",
+      });
+    }
+
+    const inserted = await sql`
+      INSERT INTO usuarios (nombre, correo, password, rol_id, aboutme, perfil_img)
+      VALUES (${username}, ${email}, ${password}, 1, '', NULL)
+      RETURNING id, rol_id
+    `;
+
+    return res.status(201).json({
+      ok: true,
+      id: inserted[0].id,
+      rol: inserted[0].rol_id,
+    });
+  } catch (err) {
+    console.error("Error creando usuario:", err);
+    return res.status(500).json({
+      ok: false,
+      message: "Error interno del servidor",
+    });
+  }
+});
+
 app.post("/api/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -198,7 +257,6 @@ app.post("/api/login", async (req, res) => {
       LIMIT 1
     `;
 
-
     if (usuario.length === 0) {
       return res.status(404).json({
         ok: false,
@@ -209,7 +267,7 @@ app.post("/api/login", async (req, res) => {
     return res.status(200).json({
       ok: true,
       id: usuario[0].id,
-      rol: usuario[0].rol_id
+      rol: usuario[0].rol_id,
     });
   } catch (err) {
     return res.status(500).json({
