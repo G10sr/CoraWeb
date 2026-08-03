@@ -1,3 +1,4 @@
+
 body {
   margin: 0;
   font-family: "Segoe UI", sans-serif;
@@ -37,6 +38,14 @@ body {
 }
 
 /* STATS */
+#stat1 {
+  background-color: var(--btnposts);
+  color: var(--fontposts)
+}
+#stat2 {
+  background-color: var(--btnverificado);
+  color: var(--fontverificado);
+}
 .stats {
   position: absolute;
   bottom: -20px;
@@ -46,7 +55,6 @@ body {
 }
 
 .stats div {
-  background-color: #A7BD8A;
   padding: 8px 12px;
   border-radius: 20px;
   text-align: center;
