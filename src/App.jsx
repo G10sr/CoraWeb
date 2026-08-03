@@ -13,6 +13,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import CoraTour from "./components/CoraTour";
 import Informativa from "./pages/Informativa";
+import AdminPanel from "./pages/AdminPanel";
 
 function Layout() {
   const location = useLocation();
@@ -33,6 +34,7 @@ function Layout() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/informativa" element={<Informativa />} />
+        <Route path="/admin" element={<AdminPanel />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
 

@@ -9,7 +9,6 @@ import { supabase } from '../lib/supabaseClient';
 
 // AgenteCora: analisis de riesgo del formulario y revision de imagenes
 import { analyzeReport } from '../agent/agenteCora';
-import { reviewImage } from '../agent/coraVision';
 import '../assets/styles/AgenteCora.css';
 
 
@@ -238,12 +237,6 @@ function MyMapComponent() {
                     throw new Error(`El archivo ${file.name} no es una imagen válida.`);
                 }
                 const compressed = await compressImageFile(file);
-
-                const revision = await reviewImage(compressed.dataUrl, file.name);
-                if (!revision.ok) {
-                    throw new Error(revision.motivo);
-                }
-
                 compressedFiles.push(compressed);
             }
 
