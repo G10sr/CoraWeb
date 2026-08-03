@@ -31,7 +31,7 @@ const hashStringToIndex = (value, modulo) => {
 // Comentarios ahora se persisten en el backend (tabla comentarios)
 const fetchCommentsFromApi = async (pointId) => {
   try {
-    const res = await fetch(`http://localhost:3000/api/reportes/${pointId}/comentarios`);
+    const res = await fetch(`/api/reportes/${pointId}/comentarios`);
     if (!res.ok) {
       const text = await res.text();
       console.error('fetchComments non-ok response:', res.status, text);
@@ -111,7 +111,7 @@ function PointDetailModal({ point, onClose }) {
     const cargarPerfil = async () => {
       try {
         const response = await fetch(
-          "http://localhost:3000/api/load-perfil",
+          "/api/load-perfil",
           {
             method: "POST",
             headers: {
@@ -163,7 +163,7 @@ function PointDetailModal({ point, onClose }) {
 
     (async () => {
       try {
-        const res = await fetch(`http://localhost:3000/api/reportes/${point.id}/comentarios`, {
+        const res = await fetch(`/api/reportes/${point.id}/comentarios`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ usuarioId: USER_ID, comentario: text }),
@@ -361,7 +361,7 @@ function ArchiveroPage() {
   useEffect(() => {
     const cargarPuntos = async () => {
       try {
-        const response = await fetch("http://localhost:3000/api/reportes");
+        const response = await fetch("/api/reportes");
         const data = await response.json();
 
         if (!data.ok) {

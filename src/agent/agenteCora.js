@@ -272,9 +272,15 @@ export function answerQuestion(text) {
     };
   }
 
+  if (has(msg, ["ruta", "como llego", "como llegar", "direcciones", "camino", "navegar hasta", "ir al punto", "waze", "distancia al punto"])) {
+    return {
+      text: "Activa tu ubicacion, toca el punto que te interesa en el mapa y presiona \"Ver ruta hasta aqui\". Te dibujo el camino a pie con la distancia y el tiempo estimado, y lo quitas cuando quieras con \"Quitar ruta\".",
+    };
+  }
+
   if (has(msg, ["ubicacion", "ubicar", "localiz", "donde estoy", "mi posicion", "gps", "centrar el mapa"])) {
     return {
-      text: "Toca el boton \"Activar mi ubicacion\" arriba a la izquierda y el mapa te lleva a tu posicion actual. Te lo muestro en pantalla.",
+      text: "Toca el boton \"Activar mi ubicacion\" arriba a la izquierda y el mapa te sigue en tiempo real mientras te moves. Te lo muestro en pantalla.",
       action: "tour",
     };
   }
