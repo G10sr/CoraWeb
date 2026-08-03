@@ -31,7 +31,7 @@ function Layout() {
         <Route path="/archivero" element={<ArchiveroPage />} />
         <Route path="/perfil" element={<Perfil />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        {/* <Route path="/register" element={<Register />} /> */}
         <Route path="/informativa" element={<Informativa />} />
         <Route path="*" element={<NotFound />} />
       </Routes>

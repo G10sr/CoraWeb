@@ -114,7 +114,6 @@ export default function Login() {
             </button>
           </form>
         </div>
-        <a className="create-account" href="/register">Crear cuenta</a>
       </main>
 
       <footer className="login-footer">
