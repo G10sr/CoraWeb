@@ -3,15 +3,11 @@ import { Navigate, useNavigate } from "react-router-dom";
 import Header from "../components/Header.jsx";
 import logo from "../assets/img/CoraLogo.png";
 import "../assets/styles/Login.css";
-
+import { getStoredUser } from "../lib/authSession";
 
 function isAuthenticated() {
-  try {
-    const user = JSON.parse(localStorage.getItem("user") || "null");
-    return user?.id != null;
-  } catch (e) {
-    return false;
-  }
+  const user = getStoredUser();
+  return user?.id != null;
 }
 
 export default function Login() {

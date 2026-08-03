@@ -7,6 +7,7 @@ import ProfileEditModal from "../components/ProfileEditModal";
 import CoraFeedbackModal from "../components/CoraFeedbackModal";
 import usr_img from "../assets/img/usr_unk.jpeg";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
+import { getStoredUser } from "../lib/authSession";
 import "leaflet/dist/leaflet.css";
 import { useNavigate } from "react-router-dom";
 import ArchiveIcon from "../assets/img/icons/file.svg";
@@ -48,7 +49,7 @@ function MiniMap({ position }) {
 
 function Profile() {
   const navigate = useNavigate();
-  const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+  const storedUser = getStoredUser();
   const USER_ID = storedUser?.id;
   const USER_ROL = storedUser?.rol;
 

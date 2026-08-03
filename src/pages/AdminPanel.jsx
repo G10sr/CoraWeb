@@ -1,13 +1,10 @@
 import { useEffect, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import "../assets/styles/AdminPanel.css";
+import { getStoredUser } from "../lib/authSession";
 
 function getCurrentUser() {
-  try {
-    return JSON.parse(localStorage.getItem("user") || "null");
-  } catch {
-    return null;
-  }
+  return getStoredUser();
 }
 
 export default function AdminPanel() {
