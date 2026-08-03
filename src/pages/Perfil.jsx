@@ -76,23 +76,10 @@ function Profile() {
 
   const eliminarPost = async (postId) => {
     try {
-<<<<<<< HEAD:src/pages/Perfil.jsx
-      const response = await fetch(
-        `http://localhost:3000/api/reportes/${postId}`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            usuarioId: USER_ID,
-          }),
-=======
       const response = await fetch(`/api/reportes/${postId}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
->>>>>>> 96cbb3b8e254c7d5dc73ec879cd23ef391fd5577:src/pages/perfil.jsx
         },
       );
 
@@ -132,17 +119,6 @@ function Profile() {
 
   async function cargarPerfil() {
     try {
-<<<<<<< HEAD:src/pages/Perfil.jsx
-      const response = await fetch("http://localhost:3000/api/load-perfil", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id: USER_ID,
-        }),
-      });
-=======
       const response = await fetch(
         "/api/load-perfil",
         {
@@ -155,7 +131,6 @@ function Profile() {
           }),
         }
       );
->>>>>>> 96cbb3b8e254c7d5dc73ec879cd23ef391fd5577:src/pages/perfil.jsx
 
       const data = await response.json();
 
@@ -178,15 +153,6 @@ function Profile() {
 
       if (perfil_img) payload.perfil_img = perfil_img;
 
-<<<<<<< HEAD:src/pages/Perfil.jsx
-      const response = await fetch("http://localhost:3000/api/perfil", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-=======
       const response = await fetch(
         "/api/perfil",
         {
@@ -197,7 +163,6 @@ function Profile() {
           body: JSON.stringify(payload)
         }
       );
->>>>>>> 96cbb3b8e254c7d5dc73ec879cd23ef391fd5577:src/pages/perfil.jsx
 
       const data = await response.json();
 
@@ -224,13 +189,7 @@ function Profile() {
 
   async function cargarPostsBackend() {
     try {
-<<<<<<< HEAD:src/pages/Perfil.jsx
-      const response = await fetch(
-        `http://localhost:3000/api/reportes?usuarioId=${USER_ID}`,
-      );
-=======
       const response = await fetch(`/api/reportes?usuarioId=${USER_ID}`);
->>>>>>> 96cbb3b8e254c7d5dc73ec879cd23ef391fd5577:src/pages/perfil.jsx
       const data = await response.json();
 
       if (!data.ok) {
