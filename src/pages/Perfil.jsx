@@ -10,7 +10,7 @@ import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { useNavigate } from "react-router-dom";
 import ArchiveIcon from "../assets/img/icons/file.svg";
-import CertificateIcon from "../assets/img/icons/certificate-solid-full.svg";
+import CertificateIcon from "../assets/img/icons/circle-user-solid-full.svg";
 
 function MiniMap({ position }) {
   const navigate = useNavigate();
@@ -47,9 +47,15 @@ function MiniMap({ position }) {
 }
 
 function Profile() {
-  const USER_ID = JSON.parse(localStorage.getItem("user")).id;
-  const USER_ROL = JSON.parse(localStorage.getItem("user")).rol;
   const navigate = useNavigate();
+  const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+  const USER_ID = storedUser?.id;
+  const USER_ROL = storedUser?.rol;
+
+  if (!USER_ID) {
+    navigate("/login");
+    return null;
+  }
 
   let verifiedPosts = 0;
 
@@ -81,7 +87,7 @@ function Profile() {
         headers: {
           "Content-Type": "application/json",
         },
-      );
+      });
 
       const data = await response.json();
       if (!data.ok) {
@@ -241,7 +247,8 @@ function Profile() {
         <button
           className="edit-profile-btn"
           onClick={() => setShowEditModal(true)}
-        img>
+        >
+          Editar perfil
         </button>
         <button
           onClick={() => {
