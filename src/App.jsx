@@ -10,16 +10,44 @@ import Perfil from "./pages/Perfil"
 import Agente from "./components/AgenteCoraChat"
 import NotFound from "./pages/NotFound";
 import Login from './pages/Login';
+import Register from './pages/Register';
 import CoraTour from "./components/CoraTour";
 import Informativa from "./pages/Informativa";
+import AdminPanel from "./pages/AdminPanel";
+import { clearStoredUser, getStoredUser } from "./lib/authSession";
 
 function Layout() {
   const location = useLocation();
 
-  const hideFooter = location.pathname === "/login";
-  const user = JSON.parse(localStorage.getItem("user") || "null")?.id;
+  const hideFooter = location.pathname === "/login" || location.pathname === "/register";
+  const storedUser = getStoredUser();
+  const user = storedUser?.id;
+
   if (!user && !hideFooter) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (user && !hideFooter) {
+    const verifyUserSession = async () => {
+      try {
+        const response = await fetch("/api/load-perfil", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: user }),
+        });
+        const data = await response.json();
+
+        if (!data?.ok || !data?.perfil) {
+          clearStoredUser();
+          window.location.replace("/login");
+        }
+      } catch {
+        clearStoredUser();
+        window.location.replace("/login");
+      }
+    };
+
+    verifyUserSession();
   }
   return (
     <>
@@ -30,7 +58,9 @@ function Layout() {
         <Route path="/archivero" element={<ArchiveroPage />} />
         <Route path="/perfil" element={<Perfil />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
         <Route path="/informativa" element={<Informativa />} />
+        <Route path="/admin" element={<AdminPanel />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
 

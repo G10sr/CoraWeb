@@ -7,13 +7,11 @@ import ProfileEditModal from "../components/ProfileEditModal";
 import CoraFeedbackModal from "../components/CoraFeedbackModal";
 import usr_img from "../assets/img/usr_unk.jpeg";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
+import { getStoredUser } from "../lib/authSession";
 import "leaflet/dist/leaflet.css";
 import { useNavigate } from "react-router-dom";
-import ArchiveIcon from "../assets/img/icons/box-archive-solid-full.svg";
-import CertificateIcon from "../assets/img/icons/certificate-solid-full.svg";
-
-
-
+import ArchiveIcon from "../assets/img/icons/file.svg";
+import CertificateIcon from "../assets/img/icons/circle-user-solid-full.svg";
 
 function MiniMap({ position }) {
   const navigate = useNavigate();
@@ -24,16 +22,13 @@ function MiniMap({ position }) {
     navigate("/", {
       state: {
         focus: position,
-        skipLocationFly: true
-      }
+        skipLocationFly: true,
+      },
     });
   };
 
   return (
-    <div
-      onClick={handleClick}
-      className="mini-map-wrapper"
-    >
+    <div onClick={handleClick} className="mini-map-wrapper">
       <MapContainer
         center={position}
         zoom={15}
@@ -53,9 +48,15 @@ function MiniMap({ position }) {
 }
 
 function Profile() {
-  const USER_ID = JSON.parse(localStorage.getItem("user")).id;
-  const USER_ROL = JSON.parse(localStorage.getItem("user")).rol;
   const navigate = useNavigate();
+  const storedUser = getStoredUser();
+  const USER_ID = storedUser?.id;
+  const USER_ROL = storedUser?.rol;
+
+  if (!USER_ID) {
+    navigate("/login");
+    return null;
+  }
 
   let verifiedPosts = 0;
 
@@ -68,28 +69,25 @@ function Profile() {
   const [nombre, setNombre] = useState("");
   const [aboutme, setAboutme] = useState("");
   const [BannerImage, setBannerImage] = useState("");
-const [editando, setEditando] = useState(false);
-const [showEditModal, setShowEditModal] = useState(false);
+  const [editando, setEditando] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   useEffect(() => {
     cargarPerfil();
   }, []);
 
   useEffect(() => {
-    fetch("http://localhost:3000/api/nature-image")
+    fetch("/api/nature-image")
       .then((r) => r.json())
       .then((data) => setBannerImage(data.image));
   }, []);
 
   const eliminarPost = async (postId) => {
     try {
-      const response = await fetch(`http://localhost:3000/api/reportes/${postId}`, {
+      const response = await fetch(`/api/reportes/${postId}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          usuarioId: USER_ID,
-        }),
       });
 
       const data = await response.json();
@@ -99,29 +97,29 @@ const [showEditModal, setShowEditModal] = useState(false);
 
       setPosts((prev) => prev.filter((post) => post.id !== postId));
       showFeedback({
-        variant: 'success',
-        title: 'Reporte eliminado',
-        message: 'Reporte eliminado correctamente.',
-        confirmLabel: 'Perfecto'
+        variant: "success",
+        title: "Reporte eliminado",
+        message: "Reporte eliminado correctamente.",
+        confirmLabel: "Perfecto",
       });
     } catch (error) {
       console.error(error);
       showFeedback({
-        variant: 'error',
-        title: 'Error al eliminar',
-        message: 'Error al eliminar el reporte: ' + error.message,
-        confirmLabel: 'Entendido'
+        variant: "error",
+        title: "Error al eliminar",
+        message: "Error al eliminar el reporte: " + error.message,
+        confirmLabel: "Entendido",
       });
     }
   };
 
   const requestDeletePost = (postId) => {
     showFeedback({
-      variant: 'confirm',
-      title: 'Eliminar reporte',
-      message: '¿Deseas eliminar este reporte?',
-      confirmLabel: 'Eliminar',
-      cancelLabel: 'Cancelar',
+      variant: "confirm",
+      title: "Eliminar reporte",
+      message: "¿Deseas eliminar este reporte?",
+      confirmLabel: "Eliminar",
+      cancelLabel: "Cancelar",
       onConfirm: () => eliminarPost(postId),
     });
   };
@@ -129,7 +127,7 @@ const [showEditModal, setShowEditModal] = useState(false);
   async function cargarPerfil() {
     try {
       const response = await fetch(
-        "http://localhost:3000/api/load-perfil",
+        "/api/load-perfil",
         {
           method: "POST",
           headers: {
@@ -163,7 +161,7 @@ const [showEditModal, setShowEditModal] = useState(false);
       if (perfil_img) payload.perfil_img = perfil_img;
 
       const response = await fetch(
-        "http://localhost:3000/api/perfil",
+        "/api/perfil",
         {
           method: "PUT",
           headers: {
@@ -179,18 +177,16 @@ const [showEditModal, setShowEditModal] = useState(false);
         setEditando(false);
         cargarPerfil();
         showFeedback({
-          variant: 'success',
-          title: 'Perfil actualizado',
-          message: 'Los cambios en tu perfil se guardaron correctamente.',
-          confirmLabel: 'Perfecto'
+          variant: "success",
+          title: "Perfil actualizado",
+          message: "Los cambios en tu perfil se guardaron correctamente.",
+          confirmLabel: "Perfecto",
         });
       }
-    }
-    catch (err) {
+    } catch (err) {
       console.error(err);
     }
   }
-
 
   useEffect(() => {
     if (perfil) {
@@ -200,7 +196,7 @@ const [showEditModal, setShowEditModal] = useState(false);
 
   async function cargarPostsBackend() {
     try {
-      const response = await fetch(`http://localhost:3000/api/reportes?usuarioId=${USER_ID}`);
+      const response = await fetch(`/api/reportes?usuarioId=${USER_ID}`);
       const data = await response.json();
 
       if (!data.ok) {
@@ -232,8 +228,7 @@ const [showEditModal, setShowEditModal] = useState(false);
     }
   }
 
-
-  // Contar los verificados
+  // Contar los verificados PARTE Q MUESTRA POSTS Y VERIFICADOS DEL USUARIO
   for (let i = 0; i < posts.length; i++) {
     if (posts[i].verified === true) {
       verifiedPosts++;
@@ -243,22 +238,23 @@ const [showEditModal, setShowEditModal] = useState(false);
   console.log("Posts verificados:", verifiedPosts);
   return (
     <div className="profile-container page-transition">
-      <div className="header" style={{ backgroundImage: `url(${BannerImage})` }}>
+      <div
+        className="header"
+        style={{ backgroundImage: `url(${BannerImage})` }}
+      >
         <div className="avatar">
-          <img
-            src={perfil?.perfil_img ?? usr_img}
-            alt="Avatar"
-          />
+          <img src={perfil?.perfil_img ?? usr_img} alt="Avatar" />
         </div>
-        <button className="edit-profile-btn"
+        <button
+          className="edit-profile-btn"
           onClick={() => setShowEditModal(true)}
         >
           Editar perfil
         </button>
         <button
           onClick={() => {
-            localStorage.clear(); 
-            navigate("/login");   
+            localStorage.clear();
+            navigate("/login");
           }}
           style={{
             margin: "10px",
@@ -272,13 +268,12 @@ const [showEditModal, setShowEditModal] = useState(false);
         >
           🧹 Borrar localStorage (debug)
         </button>
-
         <div className="stats">
-          <div>
+          <div id="stat1">
             <strong>{posts.length}</strong>
             <span>Posts</span>
           </div>
-          <div>
+          <div id="stat2">
             <strong>{verifiedPosts}</strong>
             <span>Verificados</span>
           </div>
@@ -326,8 +321,10 @@ const [showEditModal, setShowEditModal] = useState(false);
             ) : (
               posts.map((post, index) => (
                 <div className="post-card" key={index}>
-                  <div className={`verification-status ${post.verified ? 'verified' : 'unverified'}`}>
-                    {post.verified ? 'Verificado' : 'No verificado'}
+                  <div
+                    className={`verification-status ${post.verified ? "verified" : "unverified"}`}
+                  >
+                    {post.verified ? "Verificado" : "No verificado"}
                   </div>
 
                   <div className="mini-map-wrapper">
@@ -353,11 +350,13 @@ const [showEditModal, setShowEditModal] = useState(false);
                     </h3>
 
                     <p className="post-description">
-                      Se detectó una acumulación de <strong>{post.amount}</strong> de residuos
-                      clasificados como <strong>{post.materialType}</strong>. El área presenta una
-                      pendiente <strong>{post.slope}</strong> y una cercanía al agua de nivel{" "}
-                      <strong>{post.waterProximity}</strong>, lo que genera un riesgo de
-                      contaminación <strong>{post.riskLevel}</strong>.
+                      Se detectó una acumulación de{" "}
+                      <strong>{post.amount}</strong> de residuos clasificados
+                      como <strong>{post.materialType}</strong>. El área
+                      presenta una pendiente <strong>{post.slope}</strong> y una
+                      cercanía al agua de nivel{" "}
+                      <strong>{post.waterProximity}</strong>, lo que genera un
+                      riesgo de contaminación <strong>{post.riskLevel}</strong>.
                     </p>
 
                     <div className="post-footer">
@@ -415,6 +414,6 @@ const [showEditModal, setShowEditModal] = useState(false);
       )}
     </div>
   );
-};
+}
 
 export default Profile;
