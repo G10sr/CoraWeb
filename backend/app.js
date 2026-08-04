@@ -8,6 +8,7 @@ import imageRoutes from "./routes/images.js";
 import reportRoutes from "./routes/reports.js";
 import commentRoutes from "./routes/comments.js";
 import regionRoutes from "./routes/regions.js";
+import adminRoutes from "./routes/admin.js";
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.use("/api", imageRoutes);
 app.use("/api", reportRoutes);
 app.use("/api", commentRoutes);
 app.use("/api", regionRoutes);
+app.use("/api", adminRoutes);
 
 app.use((err, req, res, next) => {
   console.error("Unhandled error:", err);
