@@ -110,7 +110,7 @@ export default function Login() {
             </button>
           </form>
         </div>
-        <a className="create-account" href="/register">Crear cuenta</a>
+        {/* <a className="create-account" href="/register">Crear cuenta</a> This is for public registration */}
       </main>
 
       <footer className="login-footer">

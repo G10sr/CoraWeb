@@ -1,5 +1,5 @@
 import './App.css'
-import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useLocation, Navigate, useNavigate } from 'react-router-dom'
 
 import './assets/styles/MapaHome.css'
 import Header from "./components/Header"
@@ -15,9 +15,10 @@ import CoraTour from "./components/CoraTour";
 import Informativa from "./pages/Informativa";
 import AdminPanel from "./pages/AdminPanel";
 import { clearStoredUser, getStoredUser } from "./lib/authSession";
-
+import SafariToolbarColor from './components/SafariColor'
 function Layout() {
   const location = useLocation();
+  const navigate = useNavigate();
 
   const hideFooter = location.pathname === "/login" || location.pathname === "/register";
   const storedUser = getStoredUser();
@@ -39,26 +40,28 @@ function Layout() {
 
         if (!data?.ok || !data?.perfil) {
           clearStoredUser();
-          window.location.replace("/login");
+          navigate("/login", { replace: true });
         }
       } catch {
-        clearStoredUser();
-        window.location.replace("/login");
+        return;
       }
     };
 
     verifyUserSession();
   }
+
   return (
     <>
       <Header />
+              <SafariToolbarColor color="#04504F"/>
 
       <Routes>
+
         <Route path="/" element={<Home />} />
         <Route path="/archivero" element={<ArchiveroPage />} />
         <Route path="/perfil" element={<Perfil />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        {/* <Route path="/register" element={<Register />} />. This is for Public Registration */}
         <Route path="/informativa" element={<Informativa />} />
         <Route path="/admin" element={<AdminPanel />} />
         <Route path="*" element={<NotFound />} />
