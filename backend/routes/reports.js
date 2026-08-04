@@ -105,6 +105,20 @@ router.post("/reportes", async (req, res) => {
         message: "usuarioId, amount, latitud y longitud son requeridos",
       });
     }
+    // Verificar que el usuario no tenga más de 3 reportes
+const [{ totalreportes }] = await sql`
+  SELECT COUNT(*)::int AS totalReportes
+  FROM reportes
+  WHERE reportado_por = ${usuarioId}
+    AND verificado = false
+`;
+
+    if (totalreportes > 2) {
+      return res.status(400).json({
+        ok: false,
+        message: "Solo puedes tener un máximo de 3 reportes activos.",
+      });
+    }
 
     if (!Array.isArray(imagenes)) {
       return res.status(400).json({ ok: false, message: "imagenes debe ser un arreglo" });
@@ -187,6 +201,7 @@ router.delete("/reportes/:id", async (req, res) => {
         message: "id y usuarioId son requeridos",
       });
     }
+
 
     const deleted = await sql`
       DELETE FROM reportes

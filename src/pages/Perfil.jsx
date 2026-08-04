@@ -88,6 +88,9 @@ function Profile() {
         headers: {
           "Content-Type": "application/json",
         },
+        body: JSON.stringify({
+          usuarioId: USER_ID,
+        }),
       });
 
       const data = await response.json();
@@ -366,7 +369,6 @@ function Profile() {
                   </div>
 
                   <div className="post-actions">
-                    <span>✎</span>
                     {!post.verified ? (
                       <span
                         style={{ cursor: "pointer" }}

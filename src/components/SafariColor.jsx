@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 
 function SafariToolbarColor({ color }) {
   useEffect(() => {
-    // 1. Gestionar la etiqueta meta clásica
     let metaTag = document.querySelector('meta[name="theme-color"]');
     if (!metaTag) {
       metaTag = document.createElement('meta');
@@ -11,7 +10,6 @@ function SafariToolbarColor({ color }) {
     }
     metaTag.content = color;
 
-    // 2. TRUCO PARA SAFARI: Sincronizar el color del body
     // Safari lee el color de fondo del body para tintar la barra superior
     const originalBodyBg = document.body.style.backgroundColor;
     document.body.style.backgroundColor = color;
@@ -24,5 +22,7 @@ function SafariToolbarColor({ color }) {
 
   return null;
 }
+
+//Unica funcion, cambiar color del toolbar en Safari para IOS y MacOS
 
 export default SafariToolbarColor;
