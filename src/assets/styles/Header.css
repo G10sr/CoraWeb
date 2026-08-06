@@ -3,6 +3,7 @@
   height: 70px;
   display: flex;
   align-items: center; 
+  justify-content: space-between;
   padding: 0 2rem;
   position: sticky;
   top: 0;
@@ -28,6 +29,25 @@
   height: 100%;
 }
 
+.admin-header-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.12);
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.admin-header-icon {
+  width: 18px;
+  height: 18px;
+  filter: brightness(0) invert(1);
+}
+
 @media (max-width: 600px) {
   .main-header {
     padding: 0 1rem;
@@ -35,5 +55,10 @@
   }
   .logo-img {
     height: 35px;
+  }
+
+  .admin-header-btn {
+    padding: 0.45rem 0.7rem;
+    font-size: 0.9rem;
   }
 }
