@@ -302,12 +302,11 @@ p {
 }
 .edit-profile-btn {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 15%;
+  right: 2%;
   padding: 8px 12px;
-  background-color: #2b8a3e;
+  background-color: #2b8a3e00;
   color: #fff;
   border: none;
-  border-radius: 6px;
   cursor: pointer;
 }

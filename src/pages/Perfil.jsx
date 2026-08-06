@@ -11,7 +11,7 @@ import "leaflet/dist/leaflet.css";
 import { useNavigate } from "react-router-dom";
 import ArchiveIcon from "../assets/img/icons/file.svg";
 import CertificateIcon from "../assets/img/icons/certificate-solid-full.svg";
-
+import EditIcon from "../assets/img/icons/editar.svg";
 function MiniMap({ position }) {
   const navigate = useNavigate();
 
@@ -243,7 +243,9 @@ function Profile() {
         <button
           className="edit-profile-btn"
           onClick={() => setShowEditModal(true)}
-        img>
+          >
+          <img src="EditIcon" alt="editar" /> 
+         
         </button>
         <button
           onClick={() => {
