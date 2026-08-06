@@ -34,31 +34,70 @@ export default function ProfileEditModal({ open, onClose, initialName, initialAb
   return (
     <div className="pem-modal-overlay">
       <div className="pem-modal">
-        <h3>Editar perfil</h3>
+ <h3>Editar perfil</h3>
 
-        <div className="pem-row">
-          <label>Foto de perfil</label>
-          <div className="pem-avatar-preview">
-            {preview ? <img src={preview} alt="preview" /> : <div className="pem-avatar-placeholder">Sin imagen</div>}
-          </div>
-          <input type="file" accept="image/*" onChange={handleFile} />
+<div className="pem-content">
+
+    <div className="pem-left">
+
+        <div className="pem-avatar-preview">
+            {preview ? (
+                <img src={preview} alt="preview" />
+            ) : (
+                <div className="pem-avatar-placeholder">
+                    Sin imagen
+                </div>
+            )}
         </div>
 
-        <div className="pem-row">
-          <label>Nombre</label>
-          <input value={name} onChange={(e) => setName(e.target.value)} />
-        </div>
+        <input
+            type="file"
+            accept="image/*"
+            onChange={handleFile}
+        />
 
-        <div className="pem-row">
-          <label>Sobre mí</label>
-          <textarea value={about} onChange={(e) => setAbout(e.target.value)} rows={4} />
-        </div>
-
-        <div className="pem-actions">
-          <button className="pem-btn pem-cancel" onClick={onClose}>Cancelar</button>
-          <button className="pem-btn pem-save" onClick={handleSave}>Guardar</button>
-        </div>
-      </div>
     </div>
+
+    <div className="pem-right">
+
+        <div className="pem-row">
+            <label>Nombre</label>
+            <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+            />
+        </div>
+
+        <div className="pem-row">
+            <label>Sobre mí</label>
+            <textarea
+                rows={8}
+                value={about}
+                onChange={(e) => setAbout(e.target.value)}
+            />
+        </div>
+
+    </div>
+
+</div>
+
+<div className="pem-actions">
+    <button
+        className="pem-btn pem-cancel"
+        onClick={onClose}
+    >
+        Cancelar
+    </button>
+
+    <button
+        className="pem-btn pem-save"
+        onClick={handleSave}
+    >
+        Guardar cambios
+    </button>
+</div>
+    </div>
+        </div>
   );
 }

@@ -240,13 +240,12 @@ function Profile() {
         <div className="avatar">
           <img src={perfil?.perfil_img ?? usr_img} alt="Avatar" />
         </div>
-        <button
+        <div
           className="edit-profile-btn"
           onClick={() => setShowEditModal(true)}
-          >
-          <img src="EditIcon" alt="editar" /> 
-         
-        </button>
+          > 
+         <img class="edit-icon" src={EditIcon} alt="Editar" />
+        </div>
         <button
           onClick={() => {
             localStorage.clear();

@@ -302,11 +302,18 @@ p {
 }
 .edit-profile-btn {
   position: absolute;
-  top: 15%;
-  right: 2%;
+  top: 10%;
+  right: 1%;
   padding: 8px 12px;
   background-color: #2b8a3e00;
   color: #fff;
   border: none;
   cursor: pointer;
+}
+
+
+.edit-icon {
+  width: 40px;
+  filter: invert(0.02);
+  display: block;
 }
