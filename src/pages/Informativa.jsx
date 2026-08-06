@@ -4,13 +4,21 @@ import Footer from "../components/Footer";
 import { initGallery } from "../components/informativaGallery";
 import "../assets/styles/Informativa.css";
 
+// Importación de tus imágenes locales desde src/assets/img/Reciclaje/
+import imgAgua from "../assets/img/Reciclaje/Agua.png";
+import imgOrganico from "../assets/img/Reciclaje/Organico.png";
+import imgPilas from "../assets/img/Reciclaje/Pilas.png";
+import imgPlastico from "../assets/img/Reciclaje/Plastico.png";
+import imgReciclaje from "../assets/img/Reciclaje/Reciclaje.png";
+
+// Función auxiliar solo para las imágenes que sigan usando loremflickr
 const img = (keyword, lock) => `https://loremflickr.com/600/900/${keyword}?lock=${lock}`;
 
 const TOPICS = [
   {
     id: "reciclaje",
     title: "Reciclaje",
-    image: img("recycling", 11),
+    image: imgReciclaje,
     text: "Reciclar es devolver al ciclo productivo materiales que ya usamos. Separar bien en casa es el primer paso para que CoraWeb y la comunidad puedan gestionarlos.",
     tips: [
       "Separa por material: organico, papel, plastico, vidrio y metal.",
@@ -21,7 +29,7 @@ const TOPICS = [
   {
     id: "plastico",
     title: "Plastico",
-    image: img("plastic,bottle", 12),
+    image: imgPlastico,
     text: "El plastico tarda cientos de anos en degradarse y se convierte en microplasticos que llegan al agua. Manejarlo bien evita gran parte de la contaminacion.",
     tips: [
       "Enjuaga, seca y aplasta los envases.",
@@ -32,7 +40,7 @@ const TOPICS = [
   {
     id: "organico",
     title: "Organico y compost",
-    image: img("compost", 15),
+    image: imgOrganico,
     text: "Los restos de comida y hojas pueden transformarse en abono. Compostar reduce la basura y nutre el suelo.",
     tips: [
       "Separa los organicos de los reciclables.",
@@ -43,7 +51,7 @@ const TOPICS = [
   {
     id: "baterias",
     title: "Baterias y pilas",
-    image: img("battery", 17),
+    image: imgPilas,
     text: "Las pilas y baterias contienen metales que contaminan suelo y agua. Nunca van a la basura comun.",
     tips: [
       "Guardalas secas en un frasco aparte.",
@@ -54,7 +62,7 @@ const TOPICS = [
   {
     id: "agua",
     title: "Cuidado del agua",
-    image: img("river,water", 20),
+    image: imgAgua,
     text: "Los residuos cerca de rios y quebradas generan lixiviados que contaminan el agua. Esos puntos tienen prioridad de retiro.",
     tips: [
       "Reporta residuos cercanos al agua en el mapa.",
@@ -65,7 +73,7 @@ const TOPICS = [
   {
     id: "comunidad",
     title: "Comunidad Cora",
-    image: img("volunteer,cleanup", 22),
+    image: img("volunteer,cleanup", 22), 
     text: "CoraWeb es comunidad: cada punto reportado ayuda a todos. Juntos mapeamos y limpiamos los residuos del entorno.",
     tips: [
       "Registra puntos de residuos en el mapa.",
