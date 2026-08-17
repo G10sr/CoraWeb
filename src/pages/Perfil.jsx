@@ -11,13 +11,8 @@ import { getStoredUser } from "../lib/authSession";
 import "leaflet/dist/leaflet.css";
 import { useNavigate } from "react-router-dom";
 import ArchiveIcon from "../assets/img/icons/file.svg";
-<<<<<<< HEAD
 import CertificateIcon from "../assets/img/icons/certificate-solid-full.svg";
 import EditIcon from "../assets/img/icons/editar.svg";
-=======
-import CertificateIcon from "../assets/img/icons/circle-user-solid-full.svg";
-
->>>>>>> refs/remotes/origin/main
 function MiniMap({ position }) {
   const navigate = useNavigate();
 
