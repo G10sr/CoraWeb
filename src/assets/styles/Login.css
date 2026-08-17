@@ -27,6 +27,7 @@
 }
 
 .login-main {
+  flex-direction: column;
   position: relative;
   z-index: 1;
   flex: 1;
@@ -34,6 +35,13 @@
   align-items: center;
   justify-content: center;
   padding: 2rem 1.25rem 1.5rem;
+}
+
+.create-account{
+  margin-top: 10vh;
+  font-weight: 300;
+  text-shadow: #fff;
+  color:#fff;
 }
 
 .login-card {

@@ -49,6 +49,36 @@
 --fontperfil2: #1b5958;
 }
 
+/* iOS safe-area bars to color notch and bottom area to match header/footer */
+:root {
+  --safe-header-bg: #04504F;
+  --safe-footer-bg: #04504F;
+}
+
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: 1000001;
+  pointer-events: none;
+}
+
+/* top notch area */
+body::before {
+  top: 0;
+  height: env(safe-area-inset-top);
+  background: var(--safe-header-bg);
+}
+
+/* bottom home indicator area */
+body::after {
+  bottom: 0;
+  height: env(safe-area-inset-bottom);
+  background: var(--safe-footer-bg);
+}
+
 .dark {
   --background: 222.2 84% 4.9%;
   --foreground: 210 40% 98%;

@@ -7,11 +7,17 @@ import ProfileEditModal from "../components/ProfileEditModal";
 import CoraFeedbackModal from "../components/CoraFeedbackModal";
 import usr_img from "../assets/img/usr_unk.jpeg";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
+import { getStoredUser } from "../lib/authSession";
 import "leaflet/dist/leaflet.css";
 import { useNavigate } from "react-router-dom";
 import ArchiveIcon from "../assets/img/icons/file.svg";
+<<<<<<< HEAD
 import CertificateIcon from "../assets/img/icons/certificate-solid-full.svg";
 import EditIcon from "../assets/img/icons/editar.svg";
+=======
+import CertificateIcon from "../assets/img/icons/circle-user-solid-full.svg";
+
+>>>>>>> refs/remotes/origin/main
 function MiniMap({ position }) {
   const navigate = useNavigate();
 
@@ -47,9 +53,15 @@ function MiniMap({ position }) {
 }
 
 function Profile() {
-  const USER_ID = JSON.parse(localStorage.getItem("user")).id;
-  const USER_ROL = JSON.parse(localStorage.getItem("user")).rol;
   const navigate = useNavigate();
+  const storedUser = getStoredUser();
+  const USER_ID = storedUser?.id;
+  const USER_ROL = storedUser?.rol;
+
+  if (!USER_ID) {
+    navigate("/login");
+    return null;
+  }
 
   let verifiedPosts = 0;
 
@@ -69,25 +81,22 @@ function Profile() {
   }, []);
 
   useEffect(() => {
-    fetch("http://localhost:3000/api/nature-image")
+    fetch("/api/nature-image")
       .then((r) => r.json())
       .then((data) => setBannerImage(data.image));
   }, []);
 
   const eliminarPost = async (postId) => {
     try {
-      const response = await fetch(
-        `http://localhost:3000/api/reportes/${postId}`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            usuarioId: USER_ID,
-          }),
+      const response = await fetch(`/api/reportes/${postId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify({
+          usuarioId: USER_ID,
+        }),
+      });
 
       const data = await response.json();
       if (!data.ok) {
@@ -125,15 +134,18 @@ function Profile() {
 
   async function cargarPerfil() {
     try {
-      const response = await fetch("http://localhost:3000/api/load-perfil", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id: USER_ID,
-        }),
-      });
+      const response = await fetch(
+        "/api/load-perfil",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: USER_ID,
+          }),
+        }
+      );
 
       const data = await response.json();
 
@@ -156,13 +168,16 @@ function Profile() {
 
       if (perfil_img) payload.perfil_img = perfil_img;
 
-      const response = await fetch("http://localhost:3000/api/perfil", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
+      const response = await fetch(
+        "/api/perfil",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        }
+      );
 
       const data = await response.json();
 
@@ -189,9 +204,7 @@ function Profile() {
 
   async function cargarPostsBackend() {
     try {
-      const response = await fetch(
-        `http://localhost:3000/api/reportes?usuarioId=${USER_ID}`,
-      );
+      const response = await fetch(`/api/reportes?usuarioId=${USER_ID}`);
       const data = await response.json();
 
       if (!data.ok) {
@@ -361,7 +374,6 @@ function Profile() {
                   </div>
 
                   <div className="post-actions">
-                    <span>✎</span>
                     {!post.verified ? (
                       <span
                         style={{ cursor: "pointer" }}
